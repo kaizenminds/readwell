@@ -2,7 +2,6 @@
   "name": "Readwell",
   "short_name": "Readwell",
   "description": "A calm reader for your email newsletters.",
-  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0e1014",

@@ -1,6 +1,6 @@
 // Readwell service worker: keeps the app shell available offline.
 // Never caches calls to the user's backend (those are POSTs to script.google.com).
-const CACHE = 'readwell-v1';
+const CACHE = 'readwell-v2';
 const SHELL = ['./', 'index.html', 'setup.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

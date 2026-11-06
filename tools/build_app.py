@@ -145,7 +145,7 @@ rep("""  const showKey = k => {
   $('#discbtn').onclick = async () => {
     const ok = await confirmBox('Disconnect this device?', 'Readwell forgets your backend link and key on this device. Your mail and highlights are not touched.', 'Disconnect');
     if (!ok) return;
-    clearLocal(); setConn(null);
+    clearLocal(); setConn(null); keepHash(null);
     location.reload();
   };""")
 
@@ -179,6 +179,7 @@ async function connectWith(url, key) {
   $('#cbtn').disabled = false;
   clearLocal();
   setConn({ url: url, key: key, tzSynced: false });
+  keepHash(getConn());
   document.body.classList.remove('need-connect'); connectMsg('');
   toast('Connected. Welcome to Readwell');
   boot();
@@ -215,17 +216,31 @@ function boot() {
   }).catch(() => {});
 }
 
+/* The connect details stay in the address (after the #, which never leaves the device), so the
+   connection travels when the page moves: from Gmail's built-in browser to Safari, to the Home
+   Screen, to another tab. Each of those has its own storage on iPhone. Inside the installed app
+   the address is cleaned, since it no longer needs to travel. */
+const standalone = () => { try { return navigator.standalone === true || matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; } };
+// Only iPhone and iPad need this: there, Gmail's browser, Safari and the Home Screen app each keep
+// separate storage. Everywhere else the address is cleaned, so the key never shows or gets shared.
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function keepHash(c) {
+  const clean = location.pathname + location.search;
+  history.replaceState(null, '', c && isIOS() && !standalone() ? clean + '#connect=' + encodeURIComponent(c.url) + '&key=' + c.key : clean);
+}
 function connectFromHash() {
   const h = new URLSearchParams(location.hash.slice(1));
   if (!h.get('connect')) return false;
-  history.replaceState(null, '', location.pathname + location.search);
-  connectWith(h.get('connect'), h.get('key'));
+  const c = getConn(), url = String(h.get('connect') || '').trim(), key = String(h.get('key') || '').trim().toLowerCase();
+  if (c && c.url === url && c.key === key) { keepHash(c); return false; }   // already connected with these details
+  connectWith(url, key);
   return true;
 }
 window.addEventListener('hashchange', connectFromHash);   // connect link opened while the app is already open
 (function start() {
   if (connectFromHash()) return;
   if (!getConn()) { showConnect(); return; }
+  keepHash(getConn());
   boot();
 })();
 
