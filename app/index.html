@@ -160,7 +160,11 @@ body.list-hidden .col-list{display:none}
 .btn.ghost{background:none}
 .btn.sm{padding:4px 10px;font-size:12px}
 .btn.on{border-color:var(--accent);color:var(--accent2);background:var(--accent-bg)}
-#hlbtn{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);display:none;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.5);padding:10px 20px;border-radius:99px;align-items:center;gap:8px}
+#hlbtn{position:fixed;right:calc(24px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));display:none;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.55);padding:0 22px;height:52px;border-radius:99px;align-items:center;gap:9px;font-size:15px;font-weight:600;background:var(--raise);color:var(--ink);border:1px solid var(--line2);transition:background .15s,color .15s}
+#hlbtn svg.i{width:20px;height:20px}
+body.reading #hlbtn{display:inline-flex}
+#hlbtn.ready{background:var(--accent);color:#1a1206;border-color:var(--accent)}
+body.reading.side-open #hlbtn{right:324px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);background:#f4f5f7;color:#111;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:all .2s;z-index:80;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
 #toast.show{opacity:1;transform:translateX(-50%)}
 
@@ -226,7 +230,6 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
 /* mobile tab bar */
 .tabbar{display:none}
 #railbtn,#railscrim{display:none}
-#hltool.ready{background:var(--accent);color:#1a1206;border-color:var(--accent)}
 .hlpill{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:99px;border:1px solid var(--line2);background:var(--raise);color:var(--ink);font-weight:600;font-size:13px;margin:0 4px;flex:none}
 .hlpill:hover{border-color:var(--accent)}
 .ptag{font-size:10.5px;font-weight:600;letter-spacing:.02em;color:#ff8a4c;background:rgba(255,103,25,.12);border:1px solid rgba(255,103,25,.28);border-radius:5px;padding:0 5px;margin-left:6px;vertical-align:1px}
@@ -270,7 +273,29 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
   .rmeta{padding:10px 16px}
   .rmeta h1{font-size:16px;margin:4px 0 6px}
 }
-@media (max-width:599px), (max-width:820px) and (orientation:portrait){
+/* Tablets held upright: menu rail stays, the newsletter gets the full width, the inbox slides in over it */
+@media (min-width:600px) and (max-width:1100px) and (orientation:portrait){
+  :root{--top:60px}
+  .side{width:76px}
+  .nav button,.side-foot button{padding:13px 0}
+  .nav svg.i,.side-foot svg.i{width:24px;height:24px}
+  .ib{width:46px;height:46px}
+  .ib svg.i{width:23px;height:23px}
+  .rbar{gap:8px;padding:0 20px}
+  body:not(.reading) .col-list{flex:1;width:auto;max-width:none}
+  body:not(.reading) .col-read{display:none}
+  body.reading .col-list{position:fixed;left:76px;top:0;bottom:0;width:min(440px,68vw);max-width:none;z-index:42;padding-top:env(safe-area-inset-top);box-sizing:border-box;transform:translateX(calc(-100% - 90px));transition:transform .22s ease;box-shadow:24px 0 48px rgba(0,0,0,.5)}
+  body.reading.list-open .col-list{transform:none}
+  body.reading.list-open #railscrim{display:block;position:fixed;inset:0;z-index:41;background:rgba(0,0,0,.35)}
+  .item{padding:14px 18px}
+  .isubj{font-size:15px}
+  body.ui-large{--top:68px}
+  body.ui-large .ib{width:54px;height:54px}
+  body.ui-large .ib svg.i,body.ui-large .nav svg.i,body.ui-large .side-foot svg.i{width:27px;height:27px}
+  body.ui-large .side{width:88px}
+  body.ui-large.reading .col-list{left:88px}
+}
+@media (max-width:599px){
   .shell{padding-top:0}
   .hlpill span{display:none}
   .hlpill{width:38px;padding:0;justify-content:center}
@@ -343,8 +368,6 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
         <button class="ib mob" id="backbtn" aria-label="Back"><i data-i="back"></i></button>
         <button class="ib desk" id="listbtn" data-tip="Hide inbox"><i data-i="panel"></i></button>
         <span class="sep desk"></span>
-        <button class="hlpill" id="hltool" aria-label="Highlight selected text"><i data-i="pen"></i><span>Highlight</span></button>
-        <span class="sep"></span>
         <button class="ib" id="savebtn" data-tip="Save"><i data-i="bookmark" data-fill></i></button>
         <button class="ib" id="favbtn" data-tip="Favourite sender"><i data-i="star" data-fill></i></button>
         <button class="ib" id="unreadbtn" data-tip="Mark unread"><i data-i="mail"></i></button>
@@ -391,7 +414,7 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
 </nav>
 
 <div class="modal" id="modal"><div class="box"><h3 id="mtitle"></h3><p id="mbody"></p><div class="row"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn danger" id="mok">Delete</button></div></div></div>
-<button id="hlbtn" class="btn primary"><i data-i="pen"></i>Highlight</button>
+<button id="hlbtn" aria-label="Highlight selected text"><i data-i="pen"></i>Highlight</button>
 <div id="railscrim"></div>
 <div id="toast"></div>
 <div class="connect" id="connect"><div class="cbox">
@@ -450,7 +473,9 @@ const S = {
 };
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-const MOBILE_Q = window.matchMedia('(max-width:599px), (max-width:820px) and (orientation:portrait)');
+const MOBILE_Q = window.matchMedia('(max-width:599px)');
+const TABLET_PORTRAIT_Q = window.matchMedia('(min-width:600px) and (max-width:1100px) and (orientation:portrait)');
+const isTabletPortrait = () => TABLET_PORTRAIT_Q.matches;
 const isMobile = () => MOBILE_Q.matches;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function fmtDate(t) {
@@ -593,12 +618,27 @@ function renderTagRow() {
 /* ---------- Views ---------- */
 const TITLES = { inbox: 'Inbox', saved: 'Saved', archive: 'Archive' };
 const isList = () => ['inbox', 'saved', 'archive'].includes(S.view);
-$$('[data-v]').forEach(b => b.onclick = () => { document.body.classList.remove('rail-open'); setView(b.dataset.v); });
+$$('[data-v]').forEach(b => b.onclick = () => {
+  const v = b.dataset.v, wasOpen = document.body.classList.contains('list-open');
+  document.body.classList.remove('rail-open', 'list-open');
+  // On an upright tablet, picking Inbox, Saved or Archive while reading slides that list in to browse
+  if (isTabletPortrait() && document.body.classList.contains('reading') && ['inbox', 'saved', 'archive'].indexOf(v) >= 0) {
+    if (wasOpen && S.view === v) return;            // second tap closes it
+    if (S.view !== v) {                               // switch list without closing the newsletter
+      S.view = v; document.body.dataset.view = v;
+      $$('[data-v]').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+      $('#vtitle').textContent = TITLES[v]; loadList(true);
+    }
+    document.body.classList.add('list-open');
+    return;
+  }
+  setView(v);
+});
 function uiLarge() { try { return localStorage.getItem('rw_ui') === 'large'; } catch (e) { return false; } }
 function setUiLarge(on) { try { if (on) localStorage.setItem('rw_ui', 'large'); else localStorage.removeItem('rw_ui'); } catch (e) {} document.body.classList.toggle('ui-large', on); if (frame.contentDocument) fitFrame(frame.contentDocument); }
 document.body.classList.toggle('ui-large', uiLarge());
 $('#railbtn').onclick = () => document.body.classList.toggle('rail-open');
-$('#railscrim').onclick = () => document.body.classList.remove('rail-open');
+$('#railscrim').onclick = () => document.body.classList.remove('rail-open', 'list-open');
 // Turning the device: close panels that were opened for the other layout
 (function () {
   let was = window.innerWidth > window.innerHeight;
@@ -606,7 +646,7 @@ $('#railscrim').onclick = () => document.body.classList.remove('rail-open');
     const now = window.innerWidth > window.innerHeight;
     if (now === was) return;
     was = now;
-    document.body.classList.remove('rail-open');
+    document.body.classList.remove('rail-open', 'list-open');
     if (isMobile() || window.innerWidth <= 1180) document.body.classList.remove('side-open');
     if (frame.contentDocument) fitFrame(frame.contentDocument);
   };
@@ -725,6 +765,7 @@ function openMsg(id) {
   const item = S.items.find(x => x.id === id) || {};
   S.cur = { id: id, subject: item.subject || '', from: item.from || '', email: item.email || '', date: item.date, saved: false, archived: S.view === 'archive' };
   document.body.classList.add('reading');
+  document.body.classList.remove('list-open');
   $('#rscroll').scrollTop = 0; $('#rwrap').classList.remove('bar-up'); frame.style.height = '';
   $('#nlmenu').classList.remove('open');
   $('#rfrom').innerHTML = avatar(S.cur.from, 26) + '<span><b>' + esc(S.cur.from) + '</b>' + ptag(S.cur.email) + (S.cur.email ? ' · ' + esc(S.cur.email) : '') + (S.cur.date ? ' · ' + fmtDate(S.cur.date) : '') + '</span>';
@@ -773,7 +814,10 @@ function setListHidden(on) {
   $('#listbtn').classList.toggle('on', on);
   $('#listbtn').dataset.tip = on ? 'Show inbox' : 'Hide inbox';
 }
-$('#listbtn').onclick = () => setListHidden(!document.body.classList.contains('list-hidden'));
+$('#listbtn').onclick = () => {
+  if (isTabletPortrait()) { document.body.classList.toggle('list-open'); return; }
+  setListHidden(!document.body.classList.contains('list-hidden'));
+};
 
 function setupFrame() {
   const doc = frame.contentDocument;
@@ -818,10 +862,9 @@ function readSel(doc) {
   const sel = doc.getSelection(), t = sel && sel.rangeCount ? sel.toString().trim() : '';
   if (t.length > 2) S.lastSel = { doc: doc, range: sel.getRangeAt(0).cloneRange(), text: t, at: Date.now() };
   const live = t.length > 2 || !!(S.lastSel && S.lastSel.doc === doc && Date.now() - S.lastSel.at < 2500);
-  $('#hlbtn').style.display = live ? 'inline-flex' : 'none';
-  $('#hltool').classList.toggle('ready', live);
+  $('#hlbtn').classList.toggle('ready', live);
 }
-function hideBtn() { $('#hlbtn').style.display = 'none'; $('#hltool').classList.remove('ready'); }
+function hideBtn() { $('#hlbtn').classList.remove('ready'); }
 // The newsletter grows to its full height so the whole reader scrolls as one page
 function fitFrame(doc) {
   if (!doc || !doc.body || frame.contentDocument !== doc) return;
@@ -894,9 +937,8 @@ function unmark(doc, id) {
 }
 
 // Keep the newsletter's selection when a highlight button is pressed
-['#hlbtn', '#hltool'].forEach(id => { const b = $(id); b.addEventListener('pointerdown', e => e.preventDefault()); b.addEventListener('mousedown', e => e.preventDefault()); });
-$('#hltool').onclick = () => doHighlight(true);
-$('#hlbtn').onclick = () => doHighlight(false);
+['#hlbtn'].forEach(id => { const b = $(id); b.addEventListener('pointerdown', e => e.preventDefault()); b.addEventListener('mousedown', e => e.preventDefault()); });
+$('#hlbtn').onclick = () => doHighlight(true);
 function doHighlight(fromTool) {
   if (Date.now() - (S.hlAt || 0) < 900) return;   // one tap, one highlight
   S.hlAt = Date.now();
@@ -924,7 +966,7 @@ function doHighlight(fromTool) {
   const h = { id: tmp, messageId: S.cur.id, subject: S.cur.subject, sender: S.cur.from, text: text, note: '', tags: '', createdAt: Date.now() };
   (S.hls[h.messageId] = S.hls[h.messageId] || []).unshift(h);
   S.allHl.unshift(h);
-  if (!isMobile()) document.body.classList.add('side-open');
+  if (!isMobile() && !isTabletPortrait()) document.body.classList.add('side-open'); else toast('Highlighted. Find it under Highlights');
   renderSide(); paintCounts();
   h.ready = quiet('addHighlight', h).then(id => {
     doc.querySelectorAll('mark[data-id="' + tmp + '"]').forEach(m => m.dataset.id = id);
