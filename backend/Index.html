@@ -29,6 +29,7 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 @keyframes slide{to{left:100%}}
 
 /* shell */
+.side .nav{padding-top:12px}
 .shell{display:flex;height:100%;height:100dvh;padding-top:env(safe-area-inset-top);box-sizing:border-box}
 .side{width:224px;flex:none;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:0 10px 12px}
 .logo{display:flex;align-items:center;gap:10px;height:var(--top);flex:none;margin:0 -10px 10px;padding:0 20px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;letter-spacing:-.01em}
@@ -150,6 +151,7 @@ body.list-hidden .col-list{display:none}
 .btn.ghost{background:none}
 .btn.sm{padding:4px 10px;font-size:12px}
 .btn.on{border-color:var(--accent);color:var(--accent2);background:var(--accent-bg)}
+@media (hover:none){.ib[data-tip]:hover::after{display:none}}
 /* Reading dock: the everyday actions, floating at the bottom of the newsletter */
 .col-read{position:relative}
 #dock{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));display:none;align-items:center;gap:4px;padding:6px;border-radius:22px;background:rgba(24,27,33,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line2);box-shadow:0 16px 44px rgba(0,0,0,.55);z-index:30;transition:opacity .2s,transform .2s}
@@ -168,10 +170,9 @@ body.reading #toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 .rbar .ib{width:44px;height:44px}
 .rbar .ib svg.i{width:22px;height:22px}
 .menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+#dock .menu{top:auto;bottom:calc(100% + 10px);right:0;max-height:calc(100vh - 120px);overflow:auto}
+#dock{max-width:calc(100% - 16px)}
 .menu .mdanger{color:var(--danger)}
-body.ui-large #dock .ib{width:58px;height:58px}
-body.ui-large #dock .ib svg.i{width:27px;height:27px}
-body.ui-large #hlbtn{height:58px;font-size:16px;padding:0 22px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);background:#f4f5f7;color:#111;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:all .2s;z-index:80;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
 #toast.show{opacity:1;transform:translateX(-50%)}
 
@@ -223,11 +224,6 @@ a.btn{text-decoration:none;display:inline-block}
 .hlpill:hover{border-color:var(--accent)}
 .ptag{font-size:10.5px;font-weight:600;letter-spacing:.02em;color:#ff8a4c;background:rgba(255,103,25,.12);border:1px solid rgba(255,103,25,.28);border-radius:5px;padding:0 5px;margin-left:6px;vertical-align:1px}
 /* Larger toolbar option (Settings, per device) */
-body.ui-large{--top:60px}
-body.ui-large .rbar{gap:6px;padding:0 18px}
-body.ui-large .ib{width:50px;height:50px}
-body.ui-large .ib svg.i,body.ui-large .nav svg.i,body.ui-large .side-foot svg.i{width:22px;height:22px}
-body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
 
 @media (max-width:1180px){
   .side{width:68px;padding:0 8px 12px}
@@ -255,6 +251,12 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
 }
 /* short landscape screens (phones on their side): tighter chrome, more reading space */
 @media (max-height:540px) and (orientation:landscape){
+  .side .nav .lbl,.side .side-foot .lbl{display:none}
+  .side .nav{padding-top:6px}
+  #dock .dnav,#dock .dsep{display:none}
+  #hlbtn span{display:none}
+  #hlbtn{padding:0 14px}
+  #dock{bottom:calc(10px + env(safe-area-inset-bottom))}
   :root{--top:44px}
   .nav button,.side-foot button{padding:7px 0}
   .lbar h2{font-size:15px}
@@ -280,15 +282,12 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
   body.reading.list-open #railscrim{display:block;position:fixed;inset:0;z-index:41;background:rgba(0,0,0,.35)}
   .item{padding:14px 18px}
   .isubj{font-size:15px}
-  body.ui-large{--top:68px}
-  body.ui-large .ib{width:54px;height:54px}
-  body.ui-large .ib svg.i,body.ui-large .nav svg.i,body.ui-large .side-foot svg.i{width:27px;height:27px}
-  body.ui-large .side{width:96px}
-  body.ui-large.reading .col-list{left:96px}
 }
 @media (max-width:599px){
   .shell{padding-top:0}
-  #dock .dnav{display:none}
+  #dock .dnav,#dock .dsep,#dock #sidebtn{display:none}
+  #hlbtn span{display:none}
+  #hlbtn{padding:0 14px}
   #dock .ib{width:46px;height:46px}
   .hlpill span{display:none}
   .hlpill{width:38px;padding:0;justify-content:center}
@@ -301,7 +300,7 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
   .mob{display:inline-grid}
   .rbar{padding:env(safe-area-inset-top) 6px 0;height:calc(var(--top) + env(safe-area-inset-top))}
   .rbar .sep{display:none}
-  .rmeta{padding:12px 16px 10px;max-width:none;background:var(--panel);border-bottom:1px solid var(--line)}
+  .rmeta{padding:calc(14px + env(safe-area-inset-top)) 16px 10px;max-width:none;background:var(--panel);border-bottom:1px solid var(--line)}
   .rmeta h1{font-size:18px}
   .paper{border-radius:0;box-shadow:none;max-width:none;margin:0;min-height:calc(100vh - var(--top))}
   #side{position:fixed;left:0;right:0;top:auto;bottom:0;width:auto;max-height:55%;padding-bottom:env(safe-area-inset-bottom);border-left:0;border-top:1px solid var(--line2);border-radius:16px 16px 0 0;z-index:30;box-shadow:0 -16px 40px rgba(0,0,0,.5)}
@@ -320,13 +319,24 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
   #toast{bottom:calc(74px + env(safe-area-inset-bottom))}
   body.reading #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
 }
+/* Larger buttons (Settings, per device): always bigger than the normal size, on every screen */
+body.ui-large #dock .ib{width:58px;height:58px}
+body.ui-large #dock .ib svg.i{width:28px;height:28px}
+body.ui-large #hlbtn{height:58px;font-size:16.5px;padding:0 22px}
+body.ui-large #hlbtn svg.i{width:24px;height:24px}
+body.ui-large .nav svg.i,body.ui-large .side-foot svg.i{width:29px;height:29px}
+body.ui-large .side .nav .lbl,body.ui-large .side .side-foot .lbl{font-size:12px}
+body.ui-large .nav button,body.ui-large .side-foot button{padding-top:13px;padding-bottom:11px}
+body.ui-large .isubj{font-size:16.5px}
+body.ui-large .ifrom,body.ui-large .idate{font-size:14px}
+body.ui-large .tabbar svg.i{width:26px;height:26px}
+@media (max-width:599px){body.ui-large #dock .ib{width:50px;height:50px}}
 </style>
 </head>
 <body data-view="inbox">
 <div id="bar"></div>
 <div class="shell">
   <aside class="side">
-    <div class="logo"><div class="mark"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></div><span>Reader</span></div>
     <nav class="nav">
       <button data-v="inbox" class="on" title="Inbox"><i data-i="inbox"></i><span class="lbl">Inbox</span><span class="cnt" id="cnt-inbox"></span></button>
       <button data-v="saved" title="Saved"><i data-i="bookmark"></i><span class="lbl">Saved</span></button>
@@ -357,21 +367,6 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
     <div id="rwrap">
      <div class="rbody">
       <div id="rscroll">
-      <div class="rbar">
-        <button class="ib mob" id="backbtn" aria-label="Back"><i data-i="back"></i></button>
-        <button class="ib desk" id="listbtn" data-tip="Hide inbox"><i data-i="panel"></i></button>
-        <span class="rbtitle" id="rbtitle"></span>
-        <button class="ib" id="sidebtn" data-tip="Your highlights"><i data-i="notes"></i><span class="n" id="hln"></span></button>
-        <button class="ib" id="morebtn" data-tip="More"><i data-i="dots"></i></button>
-        <div class="menu" id="nlmenu">
-          <button id="unreadbtn">Mark as unread<small>Puts it back at the top of your Unread list.</small></button>
-          <button id="delbtn" class="mdanger">Delete forever<small>Removes it from Gmail permanently.</small></button>
-          <hr>
-          <button data-nl="one">Not a newsletter: just this email<small>Back to your Gmail inbox. Sender stays added.</small></button>
-          <button data-nl="block">Not a newsletter: never from this sender<small>All their mail goes back to your inbox.</small></button>
-          <button data-nl="remove">Remove sender and domain<small>Stops them and takes their mail out of the reader.</small></button>
-        </div>
-      </div>
       <div class="rmeta">
         <div class="rfrom" id="rfrom"></div>
         <h1 id="rtitle"></h1>
@@ -385,14 +380,26 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
       <aside id="side"></aside>
      </div>
      <div id="dock" role="toolbar" aria-label="Newsletter actions">
-       <button class="ib dnav" id="prevbtn" data-tip="Newer"><i data-i="back"></i></button>
-       <span class="dsep dnav"></span>
+       <button class="ib mob" id="backbtn" aria-label="Back to the list"><i data-i="back"></i></button>
+       <button class="ib desk" id="listbtn" data-tip="Hide inbox" aria-label="Show or hide the list"><i data-i="panel"></i></button>
+       <span class="dsep"></span>
+       <button class="ib dnav" id="prevbtn" data-tip="Newer" aria-label="Newer issue"><i data-i="up"></i></button>
        <button class="ib" id="savebtn" data-tip="Save"><i data-i="bookmark" data-fill></i></button>
        <button class="ib" id="favbtn" data-tip="Favourite sender"><i data-i="star" data-fill></i></button>
        <button id="hlbtn" aria-label="Highlight selected text"><i data-i="pen"></i><span>Highlight</span></button>
        <button class="ib" id="arch" data-tip="Archive"><i data-i="archive"></i></button>
-       <span class="dsep dnav"></span>
-       <button class="ib dnav" id="nextbtn" data-tip="Older"><i data-i="chevr"></i></button>
+       <button class="ib dnav" id="nextbtn" data-tip="Older" aria-label="Older issue"><i data-i="down"></i></button>
+       <span class="dsep"></span>
+       <button class="ib" id="sidebtn" data-tip="Your highlights" aria-label="Your highlights"><i data-i="notes"></i><span class="n" id="hln"></span></button>
+       <button class="ib" id="morebtn" data-tip="More" aria-label="More actions"><i data-i="dots"></i></button>
+       <div class="menu" id="nlmenu">
+          <button id="unreadbtn">Mark as unread<small>Puts it back at the top of your Unread list.</small></button>
+          <button id="delbtn" class="mdanger">Delete forever<small>Removes it from Gmail permanently.</small></button>
+          <hr>
+          <button data-nl="one">Not a newsletter: just this email<small>Back to your Gmail inbox. Sender stays added.</small></button>
+          <button data-nl="block">Not a newsletter: never from this sender<small>All their mail goes back to your inbox.</small></button>
+          <button data-nl="remove">Remove sender and domain<small>Stops them and takes their mail out of the reader.</small></button>
+        </div>
      </div>
     </div>
     <div id="noread"><i data-i="book"></i><div>Pick a newsletter to start reading</div></div>
@@ -436,6 +443,8 @@ const ICON = {
   book: '<path d="M4 5.5C6.5 4.5 9.5 4.5 12 6c2.5-1.5 5.5-1.5 8-.5V19c-2.5-1-5.5-1-8 .5-2.5-1.5-5.5-1.5-8-.5z"/><path d="M12 6v13.5"/>',
   sparkle: '<path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z"/>',
   notes: '<path d="M5 5h14M5 10h14M5 15h9M5 20h6"/>',
+  up: '<path d="M6 15l6-6 6 6"/>',
+  down: '<path d="M6 9l6 6 6-6"/>',
   chevr: '<path d="M9 6l6 6-6 6"/>',
   panel: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9.5 4.5v15"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>'
@@ -735,7 +744,6 @@ function openMsg(id) {
   document.body.classList.remove('list-open');
   $('#rscroll').scrollTop = 0; $('#rwrap').classList.remove('bar-up', 'scrolled'); frame.style.height = '';
   $('#nlmenu').classList.remove('open');
-  $('#rbtitle').textContent = S.cur.subject || '';
   $('#rfrom').innerHTML = avatar(S.cur.from, 26) + '<span><b>' + esc(S.cur.from) + '</b>' + ptag(S.cur.email) + (S.cur.email ? ' · ' + esc(S.cur.email) : '') + (S.cur.date ? ' · ' + fmtDate(S.cur.date) : '') + '</span>';
   $('#rtitle').textContent = S.cur.subject;
   $('#tags').value = S.tags[id] || '';
@@ -1299,8 +1307,8 @@ function renderSettings() {
     '<div class="card"><h4>' + ico('sparkle') + 'Readwell app <span class="badge">Beta</span></h4><p class="hint">The installable Readwell app connects to this backend with a private key. Keep it secret: anyone with the key and your API link can read your newsletters.</p>' +
       '<div class="row" style="justify-content:flex-start"><button class="btn" id="keybtn">Show my app key</button><button class="btn" id="rotbtn">Make a new key</button></div>' +
       '<div class="preview" id="keybox"></div></div>' +
-    '<div class="card"><div class="setrow"><div><h4>' + ico('panel') + 'Larger toolbar</h4><p class="hint" style="margin:0">Bigger buttons and more space at the top. Just this device.</p></div>' +
-      '<button class="switch' + (uiLarge() ? ' on' : '') + '" id="uisw" role="switch" aria-checked="' + uiLarge() + '" aria-label="Larger toolbar"></button></div></div>' +
+    '<div class="card"><div class="setrow"><div><h4>' + ico('panel') + 'Larger buttons</h4><p class="hint" style="margin:0">Bigger buttons, icons and list text for touch. Just this device.</p></div>' +
+      '<button class="switch' + (uiLarge() ? ' on' : '') + '" id="uisw" role="switch" aria-checked="' + uiLarge() + '" aria-label="Larger buttons"></button></div></div>' +
     '<div class="card"><h4>' + ico('book') + 'Your data</h4><p class="hint">Tags, highlights and sender decisions live in a Google Sheet in your Drive. The newsletters stay in Gmail.</p>' +
       '<div class="row" style="justify-content:flex-start">' + (st.sheetUrl ? '<a class="btn" href="' + esc(st.sheetUrl) + '" target="_blank" rel="noopener">Open data sheet</a>' : '') +
       '<button class="btn" id="clearbtn">Clear this device\'s cache</button></div></div></div>';

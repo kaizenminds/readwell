@@ -55,7 +55,7 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
 .hoursel{padding:6px 10px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);color:var(--ink)}''')
 
 # --- brand
-rep('<span>Reader</span></div>', '<span>Readwell</span></div>')
+# (the reader no longer has a logo in its side menu)
 
 # --- connect screen markup
 rep('<div id="toast"></div>', '''<div id="toast"></div>
