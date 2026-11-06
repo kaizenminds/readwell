@@ -225,6 +225,8 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
 
 /* mobile tab bar */
 .tabbar{display:none}
+#railbtn,#railscrim{display:none}
+#hltool.ready{color:var(--accent);background:var(--accent-bg)}
 
 @media (max-width:1180px){
   .side{width:68px;padding:0 8px 12px}
@@ -233,6 +235,14 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
   .nav button,.side-foot button{justify-content:center;padding:10px 0;position:relative}
   .cnt.hot:not(:empty){position:absolute;top:3px;right:6px;font-size:10px;padding:0 5px;line-height:16px}
   .cnt:not(.hot){display:none}
+  #railbtn{display:flex}
+  body.rail-open .side{position:fixed;left:0;top:0;bottom:0;width:224px;padding:0 10px 12px;z-index:45;box-shadow:16px 0 40px rgba(0,0,0,.5)}
+  body.rail-open .side .lbl,body.rail-open .logo span{display:inline}
+  body.rail-open .logo{padding:0 20px;margin:0 -10px 10px;justify-content:flex-start}
+  body.rail-open .nav button,body.rail-open .side-foot button{justify-content:flex-start;padding:9px 10px}
+  body.rail-open #railbtn i{transform:rotate(180deg)}
+  body.rail-open .shell{padding-left:68px}
+  body.rail-open #railscrim{display:block;position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.35)}
   #side{position:absolute;right:0;top:0;bottom:0;z-index:20;box-shadow:-16px 0 40px rgba(0,0,0,.45)}
   .rmeta{max-width:none;background:var(--panel);border-bottom:1px solid var(--line)}
   .paper{border-radius:0;box-shadow:none;max-width:none;margin:0;min-height:calc(100vh - var(--top))}
@@ -264,7 +274,7 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
   .rmeta{padding:12px 16px 10px;max-width:none;background:var(--panel);border-bottom:1px solid var(--line)}
   .rmeta h1{font-size:18px}
   .paper{border-radius:0;box-shadow:none;max-width:none;margin:0;min-height:calc(100vh - var(--top))}
-  #side{position:fixed;left:0;right:0;bottom:0;width:auto;max-height:55%;border-left:0;border-top:1px solid var(--line2);border-radius:16px 16px 0 0;z-index:30;box-shadow:0 -16px 40px rgba(0,0,0,.5)}
+  #side{position:fixed;left:0;right:0;top:auto;bottom:0;width:auto;max-height:55%;padding-bottom:env(safe-area-inset-bottom);border-left:0;border-top:1px solid var(--line2);border-radius:16px 16px 0 0;z-index:30;box-shadow:0 -16px 40px rgba(0,0,0,.5)}
   .col-wide{padding:0 0 90px}
   .wtop{padding:env(safe-area-inset-top) 16px 0;height:calc(var(--top) + env(safe-area-inset-top))}
   .wide{padding:16px 16px 0}
@@ -297,6 +307,7 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
     <div class="side-foot">
       <button class="scanbtn" title="Check now"><i data-i="refresh"></i><span class="lbl">Check now</span></button>
       <button data-v="settings" title="Settings"><i data-i="sliders"></i><span class="lbl">Settings</span></button>
+      <button id="railbtn" title="Show names" aria-label="Show menu names"><i data-i="chevr"></i><span class="lbl">Hide names</span></button>
     </div>
   </aside>
 
@@ -320,6 +331,7 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
         <button class="ib mob" id="backbtn" aria-label="Back"><i data-i="back"></i></button>
         <button class="ib desk" id="listbtn" data-tip="Hide inbox"><i data-i="panel"></i></button>
         <span class="sep desk"></span>
+        <button class="ib" id="hltool" data-tip="Highlight selected text"><i data-i="pen"></i></button>
         <button class="ib" id="savebtn" data-tip="Save"><i data-i="bookmark" data-fill></i></button>
         <button class="ib" id="favbtn" data-tip="Favourite sender"><i data-i="star" data-fill></i></button>
         <button class="ib" id="unreadbtn" data-tip="Mark unread"><i data-i="mail"></i></button>
@@ -367,6 +379,7 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
 
 <div class="modal" id="modal"><div class="box"><h3 id="mtitle"></h3><p id="mbody"></p><div class="row"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn danger" id="mok">Delete</button></div></div></div>
 <button id="hlbtn" class="btn primary"><i data-i="pen"></i>Highlight</button>
+<div id="railscrim"></div>
 <div id="toast"></div>
 <div class="connect" id="connect"><div class="cbox">
   <div class="mark"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></div>
@@ -401,6 +414,7 @@ const ICON = {
   tag: '<path d="M4 4h7l9 9-7 7-9-9z"/><circle cx="8" cy="8" r="1.3"/>',
   book: '<path d="M4 5.5C6.5 4.5 9.5 4.5 12 6c2.5-1.5 5.5-1.5 8-.5V19c-2.5-1-5.5-1-8 .5-2.5-1.5-5.5-1.5-8-.5z"/><path d="M12 6v13.5"/>',
   sparkle: '<path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z"/>',
+  chevr: '<path d="M9 6l6 6-6 6"/>',
   panel: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9.5 4.5v15"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>'
 };
@@ -558,7 +572,23 @@ function renderTagRow() {
 /* ---------- Views ---------- */
 const TITLES = { inbox: 'Inbox', saved: 'Saved', archive: 'Archive' };
 const isList = () => ['inbox', 'saved', 'archive'].includes(S.view);
-$$('[data-v]').forEach(b => b.onclick = () => setView(b.dataset.v));
+$$('[data-v]').forEach(b => b.onclick = () => { document.body.classList.remove('rail-open'); setView(b.dataset.v); });
+$('#railbtn').onclick = () => document.body.classList.toggle('rail-open');
+$('#railscrim').onclick = () => document.body.classList.remove('rail-open');
+// Turning the device: close panels that were opened for the other layout
+(function () {
+  let was = window.innerWidth > window.innerHeight;
+  const turned = () => {
+    const now = window.innerWidth > window.innerHeight;
+    if (now === was) return;
+    was = now;
+    document.body.classList.remove('rail-open');
+    if (isMobile() || window.innerWidth <= 1180) document.body.classList.remove('side-open');
+    if (frame.contentDocument) fitFrame(frame.contentDocument);
+  };
+  window.addEventListener('resize', turned);
+  window.addEventListener('orientationchange', () => setTimeout(turned, 250));
+})();
 $$('#seg button').forEach(b => b.onclick = () => {
   S.mode = b.dataset.m;
   $$('#seg button').forEach(x => x.classList.toggle('on', x === b));
@@ -750,16 +780,24 @@ function setupFrame() {
   let timer;
   const check = () => {
     clearTimeout(timer);
-    timer = setTimeout(() => {
-      const sel = doc.getSelection(); const t = sel ? sel.toString().trim() : '';
-      $('#hlbtn').style.display = t.length > 2 ? 'inline-flex' : 'none';
-    }, 120);
+    timer = setTimeout(() => readSel(doc), 120);
   };
   doc.addEventListener('selectionchange', check);
   doc.addEventListener('mouseup', check);
   doc.addEventListener('touchend', check);
+  // iPad and iPhone don't always report selections made inside the newsletter, so also look every half second
+  clearInterval(S.selPoll);
+  S.selPoll = setInterval(() => { if (frame.contentDocument === doc) readSel(doc); else clearInterval(S.selPoll); }, 500);
 }
-function hideBtn() { $('#hlbtn').style.display = 'none'; }
+// Remembers the last selection for a few seconds, because tapping a button can clear it on touch screens
+function readSel(doc) {
+  const sel = doc.getSelection(), t = sel && sel.rangeCount ? sel.toString().trim() : '';
+  if (t.length > 2) S.lastSel = { doc: doc, range: sel.getRangeAt(0).cloneRange(), text: t, at: Date.now() };
+  const live = t.length > 2 || !!(S.lastSel && S.lastSel.doc === doc && Date.now() - S.lastSel.at < 2500);
+  $('#hlbtn').style.display = live ? 'inline-flex' : 'none';
+  $('#hltool').classList.toggle('ready', live);
+}
+function hideBtn() { $('#hlbtn').style.display = 'none'; $('#hltool').classList.remove('ready'); }
 // The newsletter grows to its full height so the whole reader scrolls as one page
 function fitFrame(doc) {
   if (!doc || !doc.body || frame.contentDocument !== doc) return;
@@ -827,12 +865,20 @@ function unmark(doc, id) {
   doc.body.normalize();
 }
 
-$('#hlbtn').onclick = () => {
+// Keep the newsletter's selection when a highlight button is pressed
+['#hlbtn', '#hltool'].forEach(id => { const b = $(id); b.addEventListener('pointerdown', e => e.preventDefault()); b.addEventListener('mousedown', e => e.preventDefault()); });
+$('#hltool').onclick = () => doHighlight(true);
+$('#hlbtn').onclick = () => doHighlight(false);
+function doHighlight(fromTool) {
   const doc = frame.contentDocument, sel = doc && doc.getSelection();
   hideBtn();
-  if (!S.cur || !sel || !sel.rangeCount) return;
-  const r = sel.getRangeAt(0), text = sel.toString().replace(/\s+/g, ' ').trim();
-  if (text.length < 3) return;
+  if (!S.cur || !doc) return;
+  let r = null, text = '';
+  if (sel && sel.rangeCount && sel.toString().trim().length > 2) { r = sel.getRangeAt(0); text = sel.toString(); }
+  else if (S.lastSel && S.lastSel.doc === doc && Date.now() - S.lastSel.at < 8000) { r = S.lastSel.range; text = S.lastSel.text; }
+  S.lastSel = null;
+  text = String(text).replace(/\s+/g, ' ').trim();
+  if (!r || text.length < 3) { if (fromTool) toast('Select some text in the newsletter, then tap the pen'); return; }
   const tm = textMap(doc);
   let i = -1, j = -1;
   for (let k = 0; k < tm.map.length; k++) {
