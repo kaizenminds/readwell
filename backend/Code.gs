@@ -36,7 +36,7 @@ const TX_SENDERS = /^(alerts?|billing|invoices?|orders?|payments?|statements?|es
 const SHEETS = {
   Meta: ['messageId', 'tags', 'updatedAt'],
   Highlights: ['id', 'messageId', 'subject', 'sender', 'text', 'note', 'tags', 'createdAt'],
-  Senders: ['key', 'name', 'rule', 'updatedAt', 'fav', 'count', 'lastDate'],
+  Senders: ['key', 'name', 'rule', 'updatedAt', 'fav', 'count', 'lastDate', 'platform'],
   Candidates: ['email', 'name', 'lastSubject', 'lastDate', 'count', 'kind']
 };
 
@@ -211,7 +211,8 @@ function rules_() {
   for (let i = 1; i < v.length; i++) {
     map[String(v[i][0]).toLowerCase()] = {
       row: i + 1, name: v[i][1], rule: String(v[i][2] || ''),
-      fav: v[i][4] === true || v[i][4] === 'TRUE', count: Number(v[i][5] || 0), lastDate: v[i][6]
+      fav: v[i][4] === true || v[i][4] === 'TRUE', count: Number(v[i][5] || 0), lastDate: v[i][6],
+      platform: String(v[i][7] || '')
     };
   }
   return map;
@@ -300,6 +301,40 @@ function looksPromo_(email, subject) { return PROMO_FROM.test(String(email || ''
 const KIND_RANK = { platform: 3, likely: 2, maybe: 1 };
 const kindRank_ = k => KIND_RANK[String(k || '').split(':')[0]] || 0;
 
+/** Which newsletter platform sent this, or '' if none. Writers on their own domain (lennysnewsletter.com)
+ *  still go out through the platform, which leaves its name in the raw headers. Reading those is slower,
+ *  so it is done at most RAW_LIMIT times per run. */
+const RAW_LIMIT = 60;
+let RAW_USED = 0;
+function platformFromMsg_(m) {
+  const email = addr_(m.getFrom());
+  const quick = platformOf_((email.split('@')[1] || '') + ' ' + (m.getHeader('List-Unsubscribe') || '') + ' ' + (m.getHeader('List-Id') || ''));
+  if (quick) return quick;
+  if (RAW_USED >= RAW_LIMIT) return '';
+  RAW_USED++;
+  try {
+    const raw = m.getRawContent(), cut = raw.search(/\r?\n\r?\n/);
+    return platformOf_(cut > 0 ? raw.slice(0, cut) : raw.slice(0, 20000));
+  } catch (e) { return ''; }
+}
+
+/** Remembers the platform of added senders that haven't been checked yet. Runs with every scan. */
+function tagPlatforms_(rules, maxMs) {
+  const t0 = Date.now(), sh = sheet_('Senders');
+  if (!sh.getRange(1, 8).getValue()) sh.getRange(1, 8).setValue('platform');
+  let changed = 0;
+  Object.keys(rules).forEach(k => {
+    const r = rules[k];
+    if (Date.now() - t0 > maxMs || r.rule !== 'allow' || r.platform || k.charAt(0) === '@') return;
+    const th = GmailApp.search('from:' + k + ' -in:sent', 0, 1);
+    const p = th.length ? platformFromMsg_(th[0].getMessages().pop()) : '';
+    r.platform = p || 'none';
+    sh.getRange(r.row, 8).setValue(r.platform);
+    if (p) changed++;
+  });
+  return changed;
+}
+
 /** For senders you haven't decided on: 'platform:<Name>' (sent through a newsletter platform, certain),
  *  'likely' (long-form bulk mail), 'maybe' (short bulk mail or marketing) or 'no'. */
 function detect_(m) {
@@ -308,6 +343,8 @@ function detect_(m) {
   const lists = (m.getHeader('List-Unsubscribe') || '') + ' ' + (m.getHeader('List-Id') || '');
   if (PLATFORMS.test(domain) || PLATFORMS.test(lists)) return 'platform:' + (platformOf_(domain + ' ' + lists) || 'Newsletter');
   if (!lists.trim()) return 'no';                 // not bulk mail: personal or work email
+  const deep = platformFromMsg_(m);               // own-domain writers on Substack and similar
+  if (deep) return 'platform:' + deep;
   if (TX_SENDERS.test(email)) return 'no';
   if (TX_STRONG.test(m.getSubject() || '')) return 'no';
 
@@ -377,8 +414,9 @@ function scan(mode) {
   const res = scanRange_(since, 500);
   props.setProperty('LAST_SCAN', String(now));
   res.cleaned = 0;
+  try { if (tagPlatforms_(rules_(), 60000)) res.tagged = true; } catch (e) {}
   if (mode !== 'manual' && getSettings().autoClean) { try { res.cleaned = cleanupNow(); } catch (e) {} }
-  if (res.filed || res.found || res.cleaned) { bust_(); warm_(); }   // next open is instant
+  if (res.filed || res.found || res.cleaned || res.tagged) { bust_(); warm_(); }   // next open is instant
   return res;
 }
 
@@ -461,7 +499,10 @@ function getState() {
   const tags = {};
   sheet_('Meta').getDataRange().getValues().slice(1).forEach(r => { if (r[1]) tags[String(r[0])] = String(r[1]); });
   const rules = rules_(), senders = {};
-  Object.keys(rules).forEach(k => { senders[k] = { fav: rules[k].fav, rule: rules[k].rule }; });
+  Object.keys(rules).forEach(k => {
+    senders[k] = { fav: rules[k].fav, rule: rules[k].rule };
+    if (rules[k].platform && rules[k].platform !== 'none') senders[k].platform = rules[k].platform;
+  });
   let pending = 0;
   sheet_('Candidates').getDataRange().getValues().slice(1).forEach(r => { if (!ruleFor_(rules, String(r[0]).toLowerCase())) pending++; });
   return { tags: tags, highlights: getHighlights(''), senders: senders, pending: pending, settings: getSettings() };
@@ -733,6 +774,13 @@ function allowSender(email, name) {
     items.push({ id: m.getId(), subject: m.getSubject() || '(no subject)', from: senderName_(m.getFrom()),
                  email: email, date: m.getDate().getTime(), unread: m.isUnread() });
   });
+  try {
+    const r = rules_()[email];
+    if (r && !r.platform && threads.length) {
+      const p = platformFromMsg_(threads[0].getMessages().pop());
+      sheet_('Senders').getRange(r.row, 8).setValue(p || 'none');
+    }
+  } catch (e) {}
   return { count: items.length, items: items };
 }
 
@@ -859,7 +907,7 @@ function deleteHighlight(id) {
  */
 const API_VERSION = 1;
 // Bump when Code.gs changes in a way users should update for. The app compares it with the newest version.
-const BACKEND_VERSION = 2;
+const BACKEND_VERSION = 3;
 
 function api_() {
   return {

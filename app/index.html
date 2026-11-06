@@ -435,7 +435,7 @@ const ICON = {
 // Newsletter platform from the sender's address (Substack, Beehiiv and similar), shown as a small tag
 const PLAT = [[/(^|[@.])substack\.com$/i, 'Substack'], [/beehiiv\.com$/i, 'Beehiiv'], [/ghost\.io$/i, 'Ghost'], [/(convertkit|kit)\.com$|ck\.page$/i, 'Kit'], [/buttondown\.email$|buttondown\.com$/i, 'Buttondown']];
 const platformOf = e => { e = String(e || ''); for (let k = 0; k < PLAT.length; k++) if (PLAT[k][0].test(e)) return PLAT[k][1]; return ''; };
-const ptag = e => { const p = platformOf(e); return p ? '<span class="ptag">' + p + '</span>' : ''; };
+const ptag = e => { const k = String(e || '').toLowerCase(), r = S.senders && S.senders[k]; const p = (r && r.platform) || platformOf(k); return p ? '<span class="ptag">' + esc(p) + '</span>' : ''; };
 const ico = (n, fill) => '<svg class="i' + (fill ? ' fillable' : '') + '" viewBox="0 0 24 24">' + (ICON[n] || '') + '</svg>';
 function paintIcons(root) {
   (root || document).querySelectorAll('i[data-i]').forEach(el => { el.outerHTML = ico(el.dataset.i, el.hasAttribute('data-fill')); });
@@ -1335,7 +1335,7 @@ function renderSettings() {
 }
 
 /* ---------- Connect ---------- */
-const LATEST_BACKEND = 2;
+const LATEST_BACKEND = 3;
 function codeLink() {
   const m = location.hostname.match(/^([\w-]+)\.github\.io$/), repo = location.pathname.split('/')[1];
   return m && repo ? 'https://raw.githubusercontent.com/' + m[1] + '/' + repo + '/main/backend/Code.gs' : 'https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs';
