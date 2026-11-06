@@ -33,7 +33,8 @@ Until GitHub Actions + clasp are wired up (roadmap step 5), the live copy is upd
 - `doPost` takes a text/plain JSON body `{key, fn, args}` and only runs functions listed in `api_()`.
 - The key lives in the owner's user properties. `showMyKey()` prints it in the editor log, `connectLink()` prints a one-tap connect link for the app, Settings in the old reader shows it, `rotateApiKey()` replaces it and signs out every device.
 - Opening the web app link without a key never shows the key. It queues `setup()` in the background (first visit only) and emails the owner, from and to their own Gmail, a connect link, at most once every 10 minutes. `connectLink()` and `rotateApiKey()` also email the link.
-- `doGet` only serves the reader when the link carries the key (`?k=`). Personal Gmail accounts don't reveal the viewer to the script, so an owner check by email doesn't work.
+- `doGet` only serves the reader when the link carries the key (`?k=`). Without it, everyone (the owner too, since Google does reveal the owner to their own script) gets the set-up-and-email page.
+- In the editor `ScriptApp.getService().getUrl()` is a /dev test address, so the published /exec address is remembered in user property `EXEC_URL` whenever doGet or doPost runs; `connectLink()` and the email use that.
 - Never change a deployment's access settings without the owner's explicit go-ahead.
 
 ## Key behaviour to preserve

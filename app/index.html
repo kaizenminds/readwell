@@ -1377,7 +1377,7 @@ function renderSettings() {
 }
 
 /* ---------- Connect ---------- */
-const LATEST_BACKEND = 3;
+const LATEST_BACKEND = 4;
 function codeLink() {
   const m = location.hostname.match(/^([\w-]+)\.github\.io$/), repo = location.pathname.split('/')[1];
   return m && repo ? 'https://raw.githubusercontent.com/' + m[1] + '/' + repo + '/main/backend/Code.gs' : 'https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs';

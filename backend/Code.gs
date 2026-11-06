@@ -50,7 +50,8 @@ function doGet(e) {
   // (?k=...). Personal Gmail accounts don't reveal who is viewing, so the key is the proof.
   if (!e) { startHere(); return HtmlService.createHtmlOutput(''); }   // clicked Run in the editor: do nothing
   const k = e.parameter && e.parameter.k;
-  if (!isOwner_() && !checkKey_(k)) return welcome_();
+  rememberUrl_();
+  if (!checkKey_(k)) return welcome_();   // no key in the link, owner included: set up and email the link, never show the reader
   let page;
   try { page = HtmlService.createHtmlOutputFromFile('Index'); } catch (err) { return welcome_(); }   // copies from the template have no Index file
   return page
@@ -124,9 +125,21 @@ function finishSetup() {
   setup();
 }
 
+/** The editor only sees a test address, so the published /exec link is remembered whenever it is used. */
+function rememberUrl_() {
+  try {
+    const u = ScriptApp.getService().getUrl();
+    if (u && /\/exec$/.test(u)) PropertiesService.getUserProperties().setProperty('EXEC_URL', u);
+  } catch (e) {}
+}
+function execUrl_() {
+  const u = ScriptApp.getService().getUrl();
+  return u && /\/exec$/.test(u) ? u : (PropertiesService.getUserProperties().getProperty('EXEC_URL') || '');
+}
+
 /** Emails the owner their connect link. force skips the 10-minute gap (editor and key changes). */
 function sendConnectMail_(force) {
-  const url = ScriptApp.getService().getUrl();
+  const url = execUrl_();
   if (!url || !/\/exec$/.test(url)) return 'nourl';
   const p = PropertiesService.getUserProperties();
   const last = Number(p.getProperty('LINK_MAILED') || 0);
@@ -907,7 +920,7 @@ function deleteHighlight(id) {
  */
 const API_VERSION = 1;
 // Bump when Code.gs changes in a way users should update for. The app compares it with the newest version.
-const BACKEND_VERSION = 3;
+const BACKEND_VERSION = 4;
 
 function api_() {
   return {
@@ -919,6 +932,7 @@ function api_() {
 }
 
 function doPost(e) {
+  rememberUrl_();
   let req;
   try { req = JSON.parse((e && e.postData && e.postData.contents) || '{}'); }
   catch (err) { return json_({ ok: false, error: 'Bad request' }); }
@@ -959,7 +973,7 @@ function checkKey_(k) {
 /** Run from the editor to print your private key (also part of your reader link: add ?k=KEY). */
 /** Run from the editor after deploying: prints the one-tap link that connects the Readwell app. */
 function connectLink() {
-  const url = ScriptApp.getService().getUrl(), key = apiKey_();
+  const url = execUrl_(), key = apiKey_();
   if (!url || !/\/exec$/.test(url)) {
     Logger.log('Deploy Readwell as a web app first: Deploy > New deployment > Web app, Execute as Me, Who has access: Anyone.');
     Logger.log('Then run connectLink again. (Your key, if you connect by hand: ' + key + ')');
