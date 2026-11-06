@@ -10,7 +10,7 @@ Readwell is a Gmail newsletter reader. Every user runs their own copy of the bac
   - `appsscript.json` manifest. The Gmail advanced service must stay enabled (permanent delete uses it).
 - `app/` the installable web app (PWA), published to GitHub Pages by `.github/workflows/pages.yml` on every push to `app/**`.
   - `index.html` is generated from `backend/Index.html` by `tools/build_app.py`. Never edit it by hand: change `backend/Index.html` (or the build script for app-only parts), then run `python3 tools/build_app.py`.
-  - `setup.html` the customer walkthrough. `TEMPLATE_URL` in it points at the shared template script once it exists.
+  - `setup.html` the customer walkthrough. `TEMPLATE_URL` in it points at the shared template script (a separate project in Kush's account, never run or deployed). When `backend/Code.gs` changes, the template's Code.gs must be updated too, verified by SHA-256.
   - `sw.js` caches the app shell only. It must never cache calls to a user's backend.
 - `docs/` setup guide and roadmap.
 
