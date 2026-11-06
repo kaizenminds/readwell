@@ -150,11 +150,28 @@ body.list-hidden .col-list{display:none}
 .btn.ghost{background:none}
 .btn.sm{padding:4px 10px;font-size:12px}
 .btn.on{border-color:var(--accent);color:var(--accent2);background:var(--accent-bg)}
-#hlbtn{position:fixed;right:calc(24px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));display:none;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.55);padding:0 22px;height:52px;border-radius:99px;align-items:center;gap:9px;font-size:15px;font-weight:600;background:var(--raise);color:var(--ink);border:1px solid var(--line2);transition:background .15s,color .15s}
-#hlbtn svg.i{width:20px;height:20px}
-body.reading #hlbtn{display:inline-flex}
-#hlbtn.ready{background:var(--accent);color:#1a1206;border-color:var(--accent)}
-body.reading.side-open #hlbtn{right:324px}
+/* Reading dock: the everyday actions, floating at the bottom of the newsletter */
+.col-read{position:relative}
+#dock{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));display:none;align-items:center;gap:4px;padding:6px;border-radius:22px;background:rgba(24,27,33,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line2);box-shadow:0 16px 44px rgba(0,0,0,.55);z-index:30;transition:opacity .2s,transform .2s}
+body.reading #dock{display:flex}
+body.reading.side-open #dock{left:calc(50% - 150px)}
+#dock .ib{width:48px;height:48px;border-radius:15px}
+#dock .ib svg.i{width:23px;height:23px}
+#dock .dsep{width:1px;height:26px;background:var(--line2);margin:0 2px}
+#hlbtn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 18px;margin:0 2px;border-radius:15px;border:0;background:var(--accent-bg);color:var(--accent2);font-weight:600;font-size:15px;transition:background .15s,color .15s}
+#hlbtn svg.i{width:21px;height:21px}
+#hlbtn.ready{background:var(--accent);color:#1a1206}
+#rscroll{padding-bottom:96px}
+body.reading #toast{bottom:calc(96px + env(safe-area-inset-bottom))}
+.rbtitle{flex:1;min-width:0;text-align:center;font-weight:600;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .2s;padding:0 8px}
+#rwrap.scrolled .rbtitle{opacity:1}
+.rbar .ib{width:44px;height:44px}
+.rbar .ib svg.i{width:22px;height:22px}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.menu .mdanger{color:var(--danger)}
+body.ui-large #dock .ib{width:58px;height:58px}
+body.ui-large #dock .ib svg.i{width:27px;height:27px}
+body.ui-large #hlbtn{height:58px;font-size:16px;padding:0 22px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);background:#f4f5f7;color:#111;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:all .2s;z-index:80;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
 #toast.show{opacity:1;transform:translateX(-50%)}
 
@@ -208,7 +225,7 @@ a.btn{text-decoration:none;display:inline-block}
 /* Larger toolbar option (Settings, per device) */
 body.ui-large{--top:60px}
 body.ui-large .rbar{gap:6px;padding:0 18px}
-body.ui-large .ib{width:44px;height:44px}
+body.ui-large .ib{width:50px;height:50px}
 body.ui-large .ib svg.i,body.ui-large .nav svg.i,body.ui-large .side-foot svg.i{width:22px;height:22px}
 body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
 
@@ -219,7 +236,12 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
   .nav button,.side-foot button{justify-content:center;padding:10px 0;position:relative}
   .cnt.hot:not(:empty){position:absolute;top:3px;right:6px;font-size:10px;padding:0 5px;line-height:16px}
   .cnt:not(.hot){display:none}
-  #railbtn{display:flex}
+  .side{width:84px;padding:0 6px 12px}
+  .nav button,.side-foot button{flex-direction:column;gap:4px;padding:10px 0 8px}
+  .nav svg.i,.side-foot svg.i{width:24px;height:24px}
+  .side .nav .lbl,.side .side-foot .lbl{display:block;font-size:10.5px;line-height:1.1;font-weight:500;color:var(--muted)}
+  .nav button.on .lbl{color:var(--accent)}
+  .logo{margin:0 -6px 10px}
   body.rail-open .side{position:fixed;left:0;top:0;bottom:0;width:224px;padding:0 10px 12px;z-index:45;box-shadow:16px 0 40px rgba(0,0,0,.5)}
   body.rail-open .side .lbl,body.rail-open .logo span{display:inline}
   body.rail-open .logo{padding:0 20px;margin:0 -10px 10px;justify-content:flex-start}
@@ -248,15 +270,12 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
 /* Tablets held upright: menu rail stays, the newsletter gets the full width, the inbox slides in over it */
 @media (min-width:600px) and (max-width:1100px) and (orientation:portrait){
   :root{--top:60px}
-  .side{width:76px}
-  .nav button,.side-foot button{padding:13px 0}
-  .nav svg.i,.side-foot svg.i{width:24px;height:24px}
-  .ib{width:46px;height:46px}
-  .ib svg.i{width:23px;height:23px}
+  .rbar .ib{width:48px;height:48px}
+  .rbar .ib svg.i{width:24px;height:24px}
   .rbar{gap:8px;padding:0 20px}
   body:not(.reading) .col-list{flex:1;width:auto;max-width:none}
   body:not(.reading) .col-read{display:none}
-  body.reading .col-list{position:fixed;left:76px;top:0;bottom:0;width:min(440px,68vw);max-width:none;z-index:42;padding-top:env(safe-area-inset-top);box-sizing:border-box;transform:translateX(calc(-100% - 90px));transition:transform .22s ease;box-shadow:24px 0 48px rgba(0,0,0,.5)}
+  body.reading .col-list{position:fixed;left:84px;top:0;bottom:0;width:min(440px,68vw);max-width:none;z-index:42;padding-top:env(safe-area-inset-top);box-sizing:border-box;transform:translateX(calc(-100% - 90px));transition:transform .22s ease;box-shadow:24px 0 48px rgba(0,0,0,.5)}
   body.reading.list-open .col-list{transform:none}
   body.reading.list-open #railscrim{display:block;position:fixed;inset:0;z-index:41;background:rgba(0,0,0,.35)}
   .item{padding:14px 18px}
@@ -264,11 +283,13 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
   body.ui-large{--top:68px}
   body.ui-large .ib{width:54px;height:54px}
   body.ui-large .ib svg.i,body.ui-large .nav svg.i,body.ui-large .side-foot svg.i{width:27px;height:27px}
-  body.ui-large .side{width:88px}
-  body.ui-large.reading .col-list{left:88px}
+  body.ui-large .side{width:96px}
+  body.ui-large.reading .col-list{left:96px}
 }
 @media (max-width:599px){
   .shell{padding-top:0}
+  #dock .dnav{display:none}
+  #dock .ib{width:46px;height:46px}
   .hlpill span{display:none}
   .hlpill{width:38px;padding:0;justify-content:center}
   .side{display:none}
@@ -339,17 +360,13 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
       <div class="rbar">
         <button class="ib mob" id="backbtn" aria-label="Back"><i data-i="back"></i></button>
         <button class="ib desk" id="listbtn" data-tip="Hide inbox"><i data-i="panel"></i></button>
-        <span class="sep desk"></span>
-        <button class="ib" id="savebtn" data-tip="Save"><i data-i="bookmark" data-fill></i></button>
-        <button class="ib" id="favbtn" data-tip="Favourite sender"><i data-i="star" data-fill></i></button>
-        <button class="ib" id="unreadbtn" data-tip="Mark unread"><i data-i="mail"></i></button>
-        <span class="sep"></span>
-        <button class="ib" id="arch" data-tip="Archive"><i data-i="archive"></i></button>
-        <button class="ib danger" id="delbtn" data-tip="Delete forever"><i data-i="trash"></i></button>
-        <span class="grow"></span>
+        <span class="rbtitle" id="rbtitle"></span>
         <button class="ib" id="sidebtn" data-tip="Your highlights"><i data-i="notes"></i><span class="n" id="hln"></span></button>
         <button class="ib" id="morebtn" data-tip="More"><i data-i="dots"></i></button>
         <div class="menu" id="nlmenu">
+          <button id="unreadbtn">Mark as unread<small>Puts it back at the top of your Unread list.</small></button>
+          <button id="delbtn" class="mdanger">Delete forever<small>Removes it from Gmail permanently.</small></button>
+          <hr>
           <button data-nl="one">Not a newsletter: just this email<small>Back to your Gmail inbox. Sender stays added.</small></button>
           <button data-nl="block">Not a newsletter: never from this sender<small>All their mail goes back to your inbox.</small></button>
           <button data-nl="remove">Remove sender and domain<small>Stops them and takes their mail out of the reader.</small></button>
@@ -366,6 +383,16 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
       </div>
       </div>
       <aside id="side"></aside>
+     </div>
+     <div id="dock" role="toolbar" aria-label="Newsletter actions">
+       <button class="ib dnav" id="prevbtn" data-tip="Newer"><i data-i="back"></i></button>
+       <span class="dsep dnav"></span>
+       <button class="ib" id="savebtn" data-tip="Save"><i data-i="bookmark" data-fill></i></button>
+       <button class="ib" id="favbtn" data-tip="Favourite sender"><i data-i="star" data-fill></i></button>
+       <button id="hlbtn" aria-label="Highlight selected text"><i data-i="pen"></i><span>Highlight</span></button>
+       <button class="ib" id="arch" data-tip="Archive"><i data-i="archive"></i></button>
+       <span class="dsep dnav"></span>
+       <button class="ib dnav" id="nextbtn" data-tip="Older"><i data-i="chevr"></i></button>
      </div>
     </div>
     <div id="noread"><i data-i="book"></i><div>Pick a newsletter to start reading</div></div>
@@ -386,7 +413,6 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
 </nav>
 
 <div class="modal" id="modal"><div class="box"><h3 id="mtitle"></h3><p id="mbody"></p><div class="row"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn danger" id="mok">Delete</button></div></div></div>
-<button id="hlbtn" aria-label="Highlight selected text"><i data-i="pen"></i>Highlight</button>
 <div id="railscrim"></div>
 <div id="toast"></div>
 
@@ -707,8 +733,9 @@ function openMsg(id) {
   S.cur = { id: id, subject: item.subject || '', from: item.from || '', email: item.email || '', date: item.date, saved: false, archived: S.view === 'archive' };
   document.body.classList.add('reading');
   document.body.classList.remove('list-open');
-  $('#rscroll').scrollTop = 0; $('#rwrap').classList.remove('bar-up'); frame.style.height = '';
+  $('#rscroll').scrollTop = 0; $('#rwrap').classList.remove('bar-up', 'scrolled'); frame.style.height = '';
   $('#nlmenu').classList.remove('open');
+  $('#rbtitle').textContent = S.cur.subject || '';
   $('#rfrom').innerHTML = avatar(S.cur.from, 26) + '<span><b>' + esc(S.cur.from) + '</b>' + ptag(S.cur.email) + (S.cur.email ? ' · ' + esc(S.cur.email) : '') + (S.cur.date ? ' · ' + fmtDate(S.cur.date) : '') + '</span>';
   $('#rtitle').textContent = S.cur.subject;
   $('#tags').value = S.tags[id] || '';
@@ -821,6 +848,7 @@ function scrollToMark(mk) {
 let lastY = 0;
 $('#rscroll').addEventListener('scroll', () => {
   const y = $('#rscroll').scrollTop;
+  $('#rwrap').classList.toggle('scrolled', y > 140);
   if (y > lastY + 6 && y > 120) $('#rwrap').classList.add('bar-up');
   else if (y < lastY - 6 || y < 60) $('#rwrap').classList.remove('bar-up');
   lastY = y;
@@ -1041,6 +1069,14 @@ $('#delbtn').onclick = async () => {
   bg('deleteMessage', m.id);
 };
 
+['#unreadbtn', '#delbtn'].forEach(id => $(id).addEventListener('click', () => $('#nlmenu').classList.remove('open')));
+// Newer / older issue in the current list
+function stepMsg(d) {
+  const i = S.items.findIndex(x => S.cur && x.id === S.cur.id), n = i < 0 ? null : S.items[i + d];
+  if (n) openMsg(n.id); else toast(d > 0 ? 'That was the last one in this list' : 'This is the newest one');
+}
+$('#prevbtn').onclick = () => stepMsg(-1);
+$('#nextbtn').onclick = () => stepMsg(1);
 $('#morebtn').onclick = e => { e.stopPropagation(); $('#nlmenu').classList.toggle('open'); };
 document.addEventListener('click', e => { if (!e.target.closest('#nlmenu') && !e.target.closest('#morebtn')) $('#nlmenu').classList.remove('open'); });
 
@@ -1052,7 +1088,7 @@ function rootDomain(d) {
 }
 const SHARED = /(^|\.)(gmail|googlemail|yahoo|outlook|hotmail|live|icloud|me|proton|protonmail|rediffmail|substack|beehiiv|ghost|buttondown|mailerlite|convertkit|kit)\.[a-z.]+$/i;
 
-$$('#nlmenu button').forEach(b => b.onclick = () => {
+$$('#nlmenu button[data-nl]').forEach(b => b.onclick = () => {
   const m = S.cur; if (!m) return;
   $('#nlmenu').classList.remove('open');
   const kind = b.dataset.nl;
