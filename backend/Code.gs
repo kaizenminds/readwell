@@ -39,10 +39,7 @@ function doGet(e) {
   // The reader runs with the owner's Gmail access, so it only opens with the owner's key in the link
   // (?k=...). Personal Gmail accounts don't reveal who is viewing, so the key is the proof.
   const k = e && e.parameter && e.parameter.k;
-  if (!isOwner_() && !checkKey_(k)) {
-    return HtmlService.createHtmlOutput('<p style="font:15px system-ui;padding:24px">This is a Readwell backend. Open it from the Readwell app, or use your private reader link.</p>')
-      .setTitle('Readwell');
-  }
+  if (!isOwner_() && !checkKey_(k)) return welcome_();
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('Reader')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
@@ -67,8 +64,74 @@ function setup() {
   if (!props.getProperty('SENDERS_BUILT')) { rebuildSenders_(); props.setProperty('SENDERS_BUILT', '1'); }
   const res = props.getProperty('LAST_SCAN') ? scan('manual') : backfill();   // setup never deletes mail
   props.setProperty('LAST_SCAN', String(nowSec_()));
+  props.deleteProperty('SETUP_QUEUED');
   Logger.log('Readwell is set up. Found ' + res.found + ' possible newsletter senders for you to review.');
-  Logger.log('Next: Deploy > New deployment > Web app, Execute as Me, Who has access: Anyone. Then run connectLink.');
+  if (!ScriptApp.getService().getUrl()) Logger.log('Next: Deploy > New deployment > Web app, Execute as Me, Who has access: Anyone. Then open the Web app link.');
+}
+
+/* ---------- First visit: set up and email the connect link ----------
+   Opening the backend's web app link (no key) finishes setup and emails the
+   owner their connect link. The page itself never shows the key, so someone
+   else who opens the link learns nothing: they can only make the owner's own
+   Gmail send the owner an email, at most once every 10 minutes. */
+
+const MAIL_GAP_MIN = 10;
+
+function welcome_() {
+  const p = PropertiesService.getUserProperties();
+  if (!p.getProperty('LAST_SCAN')) queueSetup_();
+  const sent = sendConnectMail_(false);
+  const msg = sent === 'sent' ? 'Readwell is set up. We just emailed your Readwell link to your Gmail.'
+    : sent === 'recent' ? 'Your Readwell link was emailed to your Gmail a few minutes ago.'
+    : 'Readwell is almost ready, but this is not the published web app link. In the editor, use Deploy, Manage deployments, and open the Web app link that ends in /exec.';
+  const sub = sent === 'nourl' ? '' : 'Open that email on the phone, tablet or laptop you read on, and tap Open Readwell. Can\'t see it? Check Spam, or come back here in ' + MAIL_GAP_MIN + ' minutes for a new one.';
+  return HtmlService.createHtmlOutput(
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<div style="font:16px/1.55 system-ui,-apple-system,sans-serif;max-width:460px;margin:12vh auto;padding:0 20px;color:#eceef2">' +
+    '<div style="width:48px;height:48px;border-radius:13px;background:#f2a93b;margin-bottom:18px"></div>' +
+    '<h1 style="font-size:24px;margin:0 0 10px">' + msg + '</h1>' +
+    '<p style="color:#a7adb7;margin:0">' + sub + '</p></div>' +
+    '<style>body{background:#0e1014;margin:0}</style>')
+    .setTitle('Readwell')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/** Runs setup a moment later in the background, so the first visit answers at once. */
+function queueSetup_() {
+  const p = PropertiesService.getUserProperties();
+  const q = Number(p.getProperty('SETUP_QUEUED') || 0);
+  if (q && Date.now() - q < 15 * 60000) return;
+  p.setProperty('SETUP_QUEUED', String(Date.now()));
+  ScriptApp.newTrigger('finishSetup').timeBased().after(1000).create();
+}
+
+/** Trigger handler for queueSetup_. */
+function finishSetup() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'finishSetup').forEach(t => ScriptApp.deleteTrigger(t));
+  setup();
+}
+
+/** Emails the owner their connect link. force skips the 10-minute gap (editor and key changes). */
+function sendConnectMail_(force) {
+  const url = ScriptApp.getService().getUrl();
+  if (!url || !/\/exec$/.test(url)) return 'nourl';
+  const p = PropertiesService.getUserProperties();
+  const last = Number(p.getProperty('LINK_MAILED') || 0);
+  if (!force && Date.now() - last < MAIL_GAP_MIN * 60000) return 'recent';
+  p.setProperty('LINK_MAILED', String(Date.now()));
+  const link = APP_URL + '#connect=' + encodeURIComponent(url) + '&key=' + apiKey_();
+  const me = Session.getEffectiveUser().getEmail();
+  const plain = 'Your Readwell link: ' + link + '\n\nOpen it on each device you read on. Keep this email private: the link is the key to your newsletters.';
+  const html =
+    '<div style="font:15px/1.55 -apple-system,system-ui,sans-serif;max-width:480px">' +
+    '<p style="font-size:18px;font-weight:600;margin:0 0 8px">Your Readwell is ready</p>' +
+    '<p style="margin:0 0 18px">Tap the button on each phone, tablet or laptop you read on. That device connects and stays connected.</p>' +
+    '<p style="margin:0 0 22px"><a href="' + link + '" style="background:#f2a93b;color:#0e1014;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block">Open Readwell</a></p>' +
+    '<p style="margin:0 0 8px;color:#555">On iPhone or iPad: if it opens inside the Gmail app, tap the Safari icon first. Then Share, Add to Home Screen.</p>' +
+    '<p style="margin:0 0 8px;color:#555">Readwell is looking through your last ' + BACKFILL_DAYS + ' days now. Newsletter senders show up under Senders in a few minutes.</p>' +
+    '<p style="margin:0;color:#888;font-size:13px">Keep this email private: the button is the key to your newsletters. Lost a device? Run rotateApiKey in your script and you get a fresh link.</p></div>';
+  GmailApp.sendEmail(me, 'Your Readwell link', plain, { htmlBody: html, name: 'Readwell' });
+  return 'sent';
 }
 
 /* ---------- Storage ---------- */
@@ -812,7 +875,8 @@ function connectLink() {
     Logger.log('Then run connectLink again. (Your key, if you connect by hand: ' + key + ')');
     return;
   }
-  Logger.log('Open this link on each device you read on. Keep it private: it contains your key.');
+  sendConnectMail_(true);
+  Logger.log('Emailed your Readwell link to your Gmail. It is also here. Keep it private: it contains your key.');
   Logger.log(APP_URL + '#connect=' + encodeURIComponent(url) + '&key=' + key);
   Logger.log('Connecting by hand? Backend link: ' + url + '   Key: ' + key);
 }
@@ -825,5 +889,6 @@ function getApiAccess() { return { key: apiKey_(), api: API_VERSION }; }
 function rotateApiKey() {
   const k = newKey_();
   PropertiesService.getUserProperties().setProperty('API_KEY', k);
+  try { if (sendConnectMail_(true) === 'sent') Logger.log('New key made. Every device is signed out. Your new link is in your Gmail.'); } catch (e) {}
   return k;
 }

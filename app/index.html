@@ -379,7 +379,7 @@ body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
     <label>Key<input id="ckey" placeholder="64 letters and numbers" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
     <button class="btn primary wide" id="cbtn">Connect</button>
   </details>
-  <div class="cfoot">Tip: the connect link from your script fills this in for you.</div>
+  <div class="cfoot">Tip: the Open Readwell button in your Readwell email fills this in for you.</div>
 </div></div>
 
 <script>
@@ -462,7 +462,7 @@ function call(showBar, fn, args) {
   const done = () => { if (showBar && --S.pending <= 0) { S.pending = 0; $('#bar').classList.remove('on'); } };
   return rawCall(conn, fn, args).then(r => { done(); return r; }, e => {
     done();
-    if (e.code === 'Unauthorized') showConnect('This device\u2019s key no longer works. Open your new connect link, or paste the new key below.');
+    if (e.code === 'Unauthorized') showConnect('This device\u2019s key no longer works. Tap the button in your newest Readwell email.');
     else toast(e.code === 'Network' || e.code === 'BadReply' ? e.message : 'Something went wrong: ' + e.message);
     throw e;
   });
@@ -1246,7 +1246,7 @@ async function connectWith(url, key) {
     if (!r || r.app !== 'readwell') throw new Error('Not a Readwell backend');
   } catch (e) {
     $('#cbtn').disabled = false;
-    return fail(e.code === 'Unauthorized' ? 'Your backend refused this key. Run connectLink in your script again and use the new link.'
+    return fail(e.code === 'Unauthorized' ? 'Your backend refused this key. Tap the button in your newest Readwell email instead.'
       : e.code === 'Network' ? 'Could not reach your backend. Check you are online and that it is deployed with access set to Anyone.'
       : 'That link didn\u2019t answer like a Readwell backend. Check it is the Web app link from your deployment.');
   }

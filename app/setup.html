@@ -44,7 +44,7 @@ hr{border:0;border-top:1px solid var(--line);margin:34px 0}
 <body>
 <main>
   <div class="top"><div class="mark"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></div><h1>Set up Readwell</h1></div>
-  <p class="lead">About 5 minutes, once. Best done on a laptop. After that you can read on any phone, tablet or computer.</p>
+  <p class="lead">3 steps, about 4 minutes, once. Best done on a laptop. After that you can read on any phone, tablet or computer.</p>
 
   <div class="why"><b>How this works.</b> Readwell has no servers. You make your own copy of its small backend inside your Google account. It reads your Gmail as you, stores your highlights in a Sheet in your Drive, and nobody else, including us, can see any of it.</div>
 
@@ -53,9 +53,8 @@ hr{border:0;border-top:1px solid var(--line);margin:34px 0}
       <h2>Copy the backend <span class="time">1 min</span></h2>
       <div id="tpl">
         <ul>
-          <li>Open the template and sign in with the Google account whose Gmail you read newsletters in.</li>
-          <li>Click <b>Overview</b> (the <b>i</b> icon on the left), then <b>Make a copy</b>.</li>
-          <li>Rename the copy to <b>Readwell</b> if you like.</li>
+          <li>Open the template, signed in with the Google account you get newsletters in.</li>
+          <li>Click <b>Overview</b> (the <b>i</b> on the left), then <b>Make a copy</b>.</li>
         </ul>
         <a class="btn" id="tplbtn" href="#" target="_blank" rel="noopener">Open the Readwell template</a>
       </div>
@@ -63,77 +62,59 @@ hr{border:0;border-top:1px solid var(--line);margin:34px 0}
         <ul>
           <li>Go to <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> and click <b>New project</b>.</li>
           <li>Replace everything in <code>Code.gs</code> with <a href="https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs" target="_blank" rel="noopener">this code</a>.</li>
-          <li>Next to <b>Services</b> click <b>+</b>, pick <b>Gmail API</b>, keep the name <code>Gmail</code>, click <b>Add</b>.</li>
+          <li>Next to <b>Services</b> click <b>+</b>, pick <b>Gmail API</b>, click <b>Add</b>.</li>
           <li>Save with Ctrl+S or Cmd+S.</li>
         </ul>
       </details>
     </li>
 
     <li>
-      <h2>Run setup <span class="time">1 min</span></h2>
-      <ul>
-        <li>In the function menu at the top, pick <code>setup</code> and click <b>Run</b>.</li>
-        <li>Click <b>Review permissions</b> and choose your account.</li>
-        <li>Google says <i>"Google hasn't verified this app"</i>. That is expected: the app is your own copy, not ours. Click <b>Advanced</b>, then <b>Go to Readwell (unsafe)</b>, then <b>Allow</b>.</li>
-      </ul>
-      <div class="note">Setup makes a Sheet in your Drive, three Gmail labels and a daily scan, then looks back over your recent mail for newsletter senders. It never deletes anything.</div>
-    </li>
-
-    <li>
-      <h2>Deploy it <span class="time">1 min</span></h2>
+      <h2>Deploy it <span class="time">2 min</span></h2>
       <ul>
         <li>Click <b>Deploy</b> (top right), then <b>New deployment</b>.</li>
         <li>Click the gear next to <b>Select type</b> and pick <b>Web app</b>.</li>
-        <li>Execute as: <b>Me</b>. Who has access: <b>Anyone</b>.</li>
-        <li>Click <b>Deploy</b>.</li>
+        <li>Execute as: <b>Me</b>. Who has access: <b>Anyone</b>. Click <b>Deploy</b>.</li>
+        <li>Click <b>Authorize access</b> and pick your account.</li>
+        <li>Google says <i>"Google hasn't verified this app"</i>. That is expected: it's your own copy, not ours. Click <b>Advanced</b>, then <b>Go to ... (unsafe)</b>, then <b>Allow</b>.</li>
       </ul>
       <details><summary>Why "Anyone"? Is that safe?</summary>
-        <p>The Readwell app lives on a different website from Google, so it can't use your Google login to reach your backend. "Anyone" lets the app reach it, and your backend then refuses every request that doesn't carry your private 64-character key. Nobody can guess it.</p>
-        <p>Treat the connect link like a password: don't post it or send it to anyone. If you think it leaked, run <code>rotateApiKey</code> in your script. The old key stops working at once.</p>
+        <p>The Readwell app lives on a different website from Google, so it can't use your Google login to reach your backend. "Anyone" lets the app reach it. Your backend then refuses every request that doesn't carry your private 64-character key, which only ever goes to your own Gmail.</p>
       </details>
     </li>
 
     <li>
-      <h2>Connect the app <span class="time">1 min</span></h2>
+      <h2>Open the link, then check Gmail <span class="time">1 min</span></h2>
       <ul>
-        <li>Back in the editor, pick <code>connectLink</code> in the function menu and click <b>Run</b>.</li>
-        <li>The log at the bottom shows your personal connect link. Open it.</li>
-        <li>Readwell opens, connects and shows your inbox.</li>
+        <li>Google now shows a <b>Web app</b> link. Click it.</li>
+        <li>Readwell sets itself up and emails you a message called <b>Your Readwell link</b>.</li>
+        <li>Open that email on the phone, tablet or laptop you read on and tap <b>Open Readwell</b>. Done.</li>
       </ul>
-      <div class="note">To use another device, send that link to yourself (a note or a message to yourself) and open it there. Each device only needs it once.</div>
-    </li>
-
-    <li>
-      <h2>Pick your newsletters <span class="time">1 min</span></h2>
-      <ul>
-        <li>Open <b>Senders</b>. Setup has listed senders that look like newsletters.</li>
-        <li>Tap <b>Add</b> for the ones you want. Their last 5 days come in straight away, and new issues land every morning.</li>
-        <li>Tap <b>Ignore</b> for the rest. Added senders skip your Gmail inbox from then on.</li>
-      </ul>
-    </li>
-
-    <li>
-      <h2>Put it on your home screen</h2>
-      <ul>
-        <li><b>iPhone or iPad:</b> open the connect link in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>.</li>
-        <li><b>Android:</b> in Chrome, tap the menu, then <b>Install app</b>.</li>
-        <li><b>Laptop:</b> in Chrome or Edge, click the install icon in the address bar.</li>
-      </ul>
-      <div class="note">On iPhone and iPad, add it to the home screen from the connect link itself, so the app opens already connected.</div>
+      <div class="note">The same email connects every device: just tap the button on each one. Keep it private, it is your key.</div>
     </li>
   </ol>
+
+  <h2 style="margin:34px 0 8px">Once you're in</h2>
+  <ul>
+    <li><b>Pick your newsletters.</b> Open <b>Senders</b>. Tap <b>Add</b> for the ones you want: their last 5 days come in straight away, and new issues land every morning. Tap <b>Ignore</b> for the rest. Senders take a few minutes to appear the first time.</li>
+    <li><b>iPhone or iPad:</b> if the email opens Readwell inside the Gmail app, tap the Safari icon first. Then <b>Share</b>, <b>Add to Home Screen</b>.</li>
+    <li><b>Android:</b> Chrome menu, <b>Install app</b>. <b>Laptop:</b> the install icon in Chrome's address bar.</li>
+  </ul>
 
   <hr>
   <div class="faq">
     <h2>Good to know</h2>
     <h3>Will it delete my mail?</h3>
     <p>Only if you ask. You can delete an issue yourself, and you can turn on auto-cleanup in Settings, which removes read issues after 5 days unless you saved, tagged, starred or highlighted them. It is off until you switch it on.</p>
+    <h3>No email?</h3>
+    <p>Look in Spam. Still nothing? Open your Web app link again after 10 minutes and a new one is sent. Find the link under Deploy, Manage deployments.</p>
+    <h3>Lost a phone?</h3>
+    <p>In your script, pick <code>rotateApiKey</code> and click <b>Run</b>. Every device is signed out and a new link arrives in your Gmail.</p>
     <h3>When does it check for new issues?</h3>
     <p>Once a day, at 7 AM in your timezone. Change the time in Settings. <b>Check now</b> runs it straight away.</p>
     <h3>"Could not reach your backend"</h3>
-    <p>Check the deployment's access is <b>Anyone</b>, and that you used the Web app link ending in <code>/exec</code>. Run <code>connectLink</code> again for a fresh link.</p>
+    <p>Check the deployment's access is <b>Anyone</b>. Then open your Web app link again (Deploy, Manage deployments) for a fresh email.</p>
     <h3>"Your backend refused this key"</h3>
-    <p>The key was changed. Run <code>connectLink</code> and open the new link on each device.</p>
+    <p>The key was changed. Tap the button in your newest <b>Your Readwell link</b> email on each device.</p>
     <h3>I changed the script. Do I need to redeploy?</h3>
     <p>Yes: <b>Deploy</b>, <b>Manage deployments</b>, pencil icon, Version: <b>New version</b>, <b>Deploy</b>. The link stays the same.</p>
     <h3>How do I stop using Readwell?</h3>
