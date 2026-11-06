@@ -21,7 +21,7 @@ It's free, it has no servers, and your mail never leaves your Google account. Us
 
 About 4 minutes, once, on a laptop:
 
-**[Open the setup guide](https://kushagraahuja-git.github.io/readwell/setup.html)**
+**[Open the setup guide](https://kaizenminds.github.io/readwell/setup.html)**
 
 1. Copy the backend into your Google account (one click).
 2. Deploy it.

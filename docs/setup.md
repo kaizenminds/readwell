@@ -1,6 +1,6 @@
 # Set up Readwell
 
-The simplest path is the app's setup page: `app/setup.html` (live at https://kushagraahuja-git.github.io/readwell/setup.html once Pages is on). It uses the installable app and needs a deployment with access set to Anyone.
+The simplest path is the app's setup page: `app/setup.html` (live at https://kaizenminds.github.io/readwell/setup.html once Pages is on). It uses the installable app and needs a deployment with access set to Anyone.
 
 The steps below are the older private-reader path, where the reader is served by your own script and access stays Only myself.
 

@@ -346,7 +346,7 @@ body.ui-large .hlpill{height:40px;padding:0 16px;font-size:14px}
   .src .acts{width:100%;justify-content:flex-start}
   .ib[data-tip]:hover::after{display:none}
   #toast{bottom:calc(74px + env(safe-area-inset-bottom))}
-  body.reading #toast{bottom:24px}
+  body.reading #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
@@ -1413,10 +1413,10 @@ function renderSettings() {
 }
 
 /* ---------- Connect ---------- */
-const LATEST_BACKEND = 4;
+const LATEST_BACKEND = 5;
 function codeLink() {
   const m = location.hostname.match(/^([\w-]+)\.github\.io$/), repo = location.pathname.split('/')[1];
-  return m && repo ? 'https://raw.githubusercontent.com/' + m[1] + '/' + repo + '/main/backend/Code.gs' : 'https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs';
+  return m && repo ? 'https://raw.githubusercontent.com/' + m[1] + '/' + repo + '/main/backend/Code.gs' : 'https://raw.githubusercontent.com/kaizenminds/readwell/main/backend/Code.gs';
 }
 const deviceTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } };
 function clearLocal() { try { Object.keys(localStorage).filter(k => k.indexOf('nr_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {} }

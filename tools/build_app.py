@@ -162,7 +162,7 @@ rep(start_old, '''/* ---------- Connect ---------- */
 const LATEST_BACKEND = __LATEST__;
 function codeLink() {
   const m = location.hostname.match(/^([\\w-]+)\\.github\\.io$/), repo = location.pathname.split('/')[1];
-  return m && repo ? 'https://raw.githubusercontent.com/' + m[1] + '/' + repo + '/main/backend/Code.gs' : 'https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs';
+  return m && repo ? 'https://raw.githubusercontent.com/' + m[1] + '/' + repo + '/main/backend/Code.gs' : 'https://raw.githubusercontent.com/kaizenminds/readwell/main/backend/Code.gs';
 }
 const deviceTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } };
 function clearLocal() { try { Object.keys(localStorage).filter(k => k.indexOf('nr_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {} }
