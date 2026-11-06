@@ -12,6 +12,7 @@ import re, pathlib
 SRC = pathlib.Path('backend/Index.html')
 OUT = pathlib.Path('app/index.html')
 v = SRC.read_text()
+LATEST = re.search(r'const BACKEND_VERSION = (\d+);', pathlib.Path('backend/Code.gs').read_text()).group(1)
 
 def rep(a, b):
     global v
@@ -124,7 +125,12 @@ rep("""    '<div class="card"><h4>' + ico('refresh') + 'Daily scan</h4><p class=
 rep("""    '<div class="card"><h4>' + ico('sparkle') + 'Readwell app <span class="badge">Beta</span></h4><p class="hint">The installable Readwell app connects to this backend with a private key. Keep it secret: anyone with the key and your API link can read your newsletters.</p>' +
       '<div class="row" style="justify-content:flex-start"><button class="btn" id="keybtn">Show my app key</button><button class="btn" id="rotbtn">Make a new key</button></div>' +
       '<div class="preview" id="keybox"></div></div>' +""",
-"""    '<div class="card"><h4>' + ico('sparkle') + 'This device</h4><p class="hint">Connected to your own Readwell backend. Lost a phone? Run rotateApiKey in your script: every device is signed out at once.</p>' +
+"""    (S.backendVersion < LATEST_BACKEND ? '<div class="card" style="border-color:var(--accent)"><h4>' + ico('refresh') + 'Backend update available</h4>' +
+      '<p class="hint">Your backend is version ' + S.backendVersion + ', the newest is ' + LATEST_BACKEND + '. About a minute:</p>' +
+      '<ol class="hint" style="padding-left:18px;margin:0 0 10px"><li>Open your Readwell project at <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a>.</li>' +
+      '<li>Replace everything in Code.gs with <a href="' + esc(codeLink()) + '" target="_blank" rel="noopener">the latest code</a> and save.</li>' +
+      '<li>Deploy, Manage deployments, pencil icon, Version: New version, Deploy. Your link stays the same.</li></ol></div>' : '') +
+    '<div class="card"><h4>' + ico('sparkle') + 'This device</h4><p class="hint">Connected to your own Readwell backend. Lost a phone? Run rotateApiKey in your script: every device is signed out at once.</p>' +
       '<div class="row" style="justify-content:flex-start"><button class="btn" id="discbtn">Disconnect this device</button></div></div>' +""")
 rep("""  const showKey = k => {
     const b = $('#keybox'); b.style.display = 'block';
@@ -153,6 +159,11 @@ rep("""  const showKey = k => {
 start_old = v[v.index('/* ---------- Start: instant from this browser, then refresh quietly ---------- */'):v.index('</script>\n</body>')]
 assert start_old.count('(function start()') == 1
 rep(start_old, '''/* ---------- Connect ---------- */
+const LATEST_BACKEND = __LATEST__;
+function codeLink() {
+  const m = location.hostname.match(/^([\\w-]+)\\.github\\.io$/), repo = location.pathname.split('/')[1];
+  return m && repo ? 'https://raw.githubusercontent.com/' + m[1] + '/' + repo + '/main/backend/Code.gs' : 'https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs';
+}
 const deviceTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } };
 function clearLocal() { try { Object.keys(localStorage).filter(k => k.indexOf('nr_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {} }
 function connectMsg(t) { $('#cmsg').textContent = t || ''; $('#cmsg').style.display = t ? 'block' : 'none'; }
@@ -194,6 +205,9 @@ function boot() {
   if (cached) { S.items = cached; renderList(); }
   run('bootstrap').then(r => {
     applyState(r.state); saveState();
+    S.backendVersion = r.version || 1;
+    if (S.backendVersion < LATEST_BACKEND && !S.toldUpdate) { S.toldUpdate = true; setTimeout(() => toast('A backend update is ready. See Settings.'), 2500); }
+    if (S.view === 'settings') setView('settings');
     if (S.view === 'inbox' && !S.mode) {
       S.items = r.list.items; S.more = r.list.more; S.start = 40;
       cacheSet('inbox', S.items);
@@ -249,6 +263,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 ''')
 
+v = v.replace('__LATEST__', LATEST)
 assert 'google.script.run' not in v
 OUT.write_text(v)
 print('built', OUT, len(v))

@@ -19,6 +19,11 @@ Each user gets their own backend by copying the Readwell Apps Script template in
 
 MIT licensed. Anyone can use the hosted app with their own backend copy, or fork the repo and run their own app. The setup page adapts its links to whichever Pages site serves it; a fork only edits `APP_URL` in `backend/Code.gs`.
 
+## Ideas parked
+
+- Several Gmail accounts: Gmail forwarding covers it today. An account switcher if testers ask. A merged inbox only if many do.
+- One-tap backend self-update (opt-in), after the update card proves the need.
+
 ## Later, only if there is demand
 
 - Hosted version with Sign in with Google (needs Google verification and a yearly CASA assessment, about $540 to $720 a year).

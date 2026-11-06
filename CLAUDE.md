@@ -40,6 +40,8 @@ Until GitHub Actions + clasp are wired up (roadmap step 5), the live copy is upd
 
 - Daily trigger at the user's scan hour and timezone (user properties `SCAN_HOUR`, `TZ`; default 7 AM, Asia/Kolkata; the app moves it to the device's timezone on first connect) runs `scan()`: files mail from added senders, lists new candidate senders, then runs cleanup if enabled. `scanNow()` (the Check now button) never cleans up.
 - Adding a sender files their last 5 days immediately.
+- Detection kinds: `platform:<Name>` (sent through Substack, Beehiiv and similar: certain), `likely` (long-form bulk mail), `maybe` (short bulk mail or marketing), `no`. Senders shows an Add all button per platform. It still asks first: the review-first flow stays.
+- `BACKEND_VERSION` in Code.gs: bump it when users should update their copy. The app compares it with the version it was built with and shows an update card in Settings.
 - Auto-cleanup is off until the user turns it on. `setup()` never deletes mail.
 - Remove sender blocks the whole company domain, except shared domains (Gmail, Substack and similar), where only that address is blocked.
 - Cleanup keeps anything saved, tagged, highlighted or starred in Gmail.

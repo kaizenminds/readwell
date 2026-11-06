@@ -1034,12 +1034,17 @@ function renderSenders() {
   const cand = d.candidates.map(c =>
     '<div class="src">' + avatar(c.name) + '<div class="who"><div>' + esc(c.name) + ' <span class="sub">' + esc(c.email) + '</span></div>' +
     '<div class="sub">' + esc(c.subject) + ' · ' + fmtDate(c.date) + (c.count > 1 ? ' · ' + plural(c.count, 'email') : '') + '</div></div>' +
-    (c.kind === 'likely' ? '<span class="badge likely">Likely newsletter</span>' : '') +
+    (c.kind === 'platform' ? '<span class="badge likely">' + esc(c.platform || 'Newsletter') + '</span>' : c.kind === 'likely' ? '<span class="badge likely">Likely newsletter</span>' : '') +
     '<div class="acts">' + sAct('allow', c.email, c.name, 'Add', 'primary') + sAct('ignore', c.email, c.name, 'Ignore') + '</div></div>').join('');
+  const plat = {};
+  d.candidates.forEach(c => { if (c.kind === 'platform') (plat[c.platform || 'Newsletter'] = plat[c.platform || 'Newsletter'] || []).push(c); });
+  const bulk = Object.keys(plat).filter(k => plat[k].length > 1).sort((a, b) => plat[b].length - plat[a].length)
+    .map(k => '<button class="btn primary bulkadd" data-p="' + esc(k) + '">Add all ' + esc(k) + ' (' + plat[k].length + ')</button>').join('');
   const added = d.senders.filter(x => x.rule !== 'block'), removed = d.senders.filter(x => x.rule === 'block');
   $('#srcview').innerHTML = '<div class="wtop"><h2>Senders</h2></div><div class="wide"><p class="lead">Decide who makes it into your reader. Everything here takes effect immediately.</p>' +
     '<div class="card"><h4>New senders to review' + (d.candidates.length ? ' <span class="badge">' + d.candidates.length + '</span>' : '') + '</h4>' +
       '<p class="hint">Found by the daily scan. Add pulls in their last 5 days now, and every new issue after that. Ignore means they are never suggested again.</p>' +
+      (bulk ? '<div class="row" style="justify-content:flex-start;flex-wrap:wrap;margin:0 0 14px">' + bulk + '</div>' : '') +
       (cand || '<div class="sub" style="color:var(--muted)">Nothing to review. Check now finds new ones.</div>') + '</div>' +
     '<div class="card"><h4>Find a newsletter</h4><p class="hint">Search the last 6 months of your mail for anything not in the reader yet. Try a name, a domain, or from:ft.com.</p>' +
       '<form class="searchrow" id="missform"><input id="missq" placeholder="e.g. stratechery, morning brew, from:ft.com"><button class="btn primary">Search</button></form>' +
@@ -1052,6 +1057,25 @@ function renderSenders() {
   $('#missq').value = q; $('#missres').innerHTML = res;
   $('#missform').onsubmit = e => { e.preventDefault(); searchMissed(); };
   bindSenderActs($('#srcview'));
+  $$('#srcview .bulkadd').forEach(b => b.onclick = () => addPlatform(b.dataset.p, plat[b.dataset.p]));
+}
+
+// Adds every sender from one newsletter platform in one go
+async function addPlatform(name, list) {
+  if (!list || !list.length) return;
+  const ok = await confirmBox('Add all ' + name + ' senders?', 'Adds ' + plural(list.length, 'sender') + ' and pulls in their last 5 days. You can remove any of them later.', 'Add all');
+  if (!ok) return;
+  const d = S.sendersData, emails = list.map(c => c.email);
+  d.candidates = d.candidates.filter(c => emails.indexOf(c.email) < 0);
+  setPending(Math.max(0, S.pendingSenders - list.length));
+  list.forEach(c => { upsertSender(c.email, c.name, { rule: 'allow' }); S.senders[c.email] = { fav: false, rule: 'allow' }; });
+  renderSenders();
+  toast('Adding ' + plural(list.length, name + ' sender') + '. This can take a minute…');
+  quiet('allowSenders', list.map(c => ({ email: c.email, name: c.name }))).then(r => {
+    mergeItems(r.items);
+    if (isList()) renderList(); else if (S.view === 'senders') renderSenders();
+    toast(plural(r.count, 'newsletter') + ' from ' + name + ' added to your Inbox');
+  }).catch(() => {});
 }
 
 function upsertSender(key, name, patch) {

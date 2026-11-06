@@ -19,6 +19,11 @@ const CLEAN_DAYS = 5;             // read newsletters older than this are delete
 
 // Newsletter platforms: mail from these is always a newsletter
 const PLATFORMS = /(substack\.com|beehiiv\.com|convertkit|ck\.page|kit\.com|ghost\.io|buttondown|mailerlite|letterdrop)/i;
+const PLATFORM_NAMES = [[/substack/i, 'Substack'], [/beehiiv/i, 'Beehiiv'], [/ghost\.io/i, 'Ghost'], [/convertkit|ck\.page|kit\.com/i, 'Kit'],
+  [/buttondown/i, 'Buttondown'], [/mailerlite/i, 'MailerLite'], [/letterdrop/i, 'Letterdrop']];
+// Long bulk mail that is really marketing: sales, offers, streaming and shopping pushes
+const PROMO_SUBJ = /(\bsale\b|% ?off|\boffers?\b|\bdeals?\b|discount|cashback|coupon|\bfree\b|limited time|ends (today|tonight|soon)|last chance|\bshop\b|new arrivals|book now|\bwatch\b|streaming|subscribe now|upgrade|just ₹|₹ ?\d|rs\.? ?\d|\$ ?\d)/i;
+const PROMO_FROM = /^(no-?reply|noreply|do-?not-?reply|marketing|offers?|promos?|promotions?|deals?|campaigns?|sales?|shop|store)[@._-]|[@.](e?mail\.)?campaign/i;
 // Shared mail domains: removing a sender here never blocks the whole domain
 const SHARED = /(^|\.)(gmail|googlemail|yahoo|outlook|hotmail|live|icloud|me|proton|protonmail|rediffmail)\.[a-z.]+$/i;
 // Short bulk mail with these words in the subject is transactional, not a newsletter
@@ -270,7 +275,7 @@ function noteCandidate_(cands, email, name, subject, date, kind) {
   const c = cands[email];
   if (c) {
     c.count++;
-    if (c.kind === 'likely') kind = 'likely';
+    if (kindRank_(c.kind) > kindRank_(kind)) kind = c.kind;
     sh.getRange(c.row, 2, 1, 5).setValues([[name, subject, date, c.count, kind]]);
     c.kind = kind;
   } else {
@@ -287,18 +292,27 @@ function dropCandidate_(email) {
 
 /* ---------- Detection ---------- */
 
-/** For senders you haven't decided on: 'likely', 'maybe' or 'no'. */
+function platformOf_(text) {
+  for (let i = 0; i < PLATFORM_NAMES.length; i++) if (PLATFORM_NAMES[i][0].test(text)) return PLATFORM_NAMES[i][1];
+  return '';
+}
+function looksPromo_(email, subject) { return PROMO_FROM.test(String(email || '')) || PROMO_SUBJ.test(String(subject || '')); }
+const KIND_RANK = { platform: 3, likely: 2, maybe: 1 };
+const kindRank_ = k => KIND_RANK[String(k || '').split(':')[0]] || 0;
+
+/** For senders you haven't decided on: 'platform:<Name>' (sent through a newsletter platform, certain),
+ *  'likely' (long-form bulk mail), 'maybe' (short bulk mail or marketing) or 'no'. */
 function detect_(m) {
   const email = addr_(m.getFrom());
   const domain = email.split('@')[1] || '';
   const lists = (m.getHeader('List-Unsubscribe') || '') + ' ' + (m.getHeader('List-Id') || '');
-  if (PLATFORMS.test(domain) || PLATFORMS.test(lists)) return 'likely';
+  if (PLATFORMS.test(domain) || PLATFORMS.test(lists)) return 'platform:' + (platformOf_(domain + ' ' + lists) || 'Newsletter');
   if (!lists.trim()) return 'no';                 // not bulk mail: personal or work email
   if (TX_SENDERS.test(email)) return 'no';
   if (TX_STRONG.test(m.getSubject() || '')) return 'no';
 
   const words = (m.getPlainBody() || '').split(/\s+/).filter(Boolean).length;
-  if (words >= MIN_WORDS) return 'likely';        // long-form bulk mail
+  if (words >= MIN_WORDS) return looksPromo_(email, m.getSubject()) ? 'maybe' : 'likely';   // long-form bulk mail, unless it's marketing
   if (TX_WORDS.test(m.getSubject() || '')) return 'no';
   return 'maybe';                                 // short bulk mail: usually promos
 }
@@ -387,8 +401,10 @@ function readTags_() {
 /** One round trip at startup: tags, highlights, sender flags and the first page of the inbox. */
 function bootstrap() {
   const hit = getBig_(BOOT_KEY);
-  if (hit) { hit.cached = true; return hit; }
-  return warm_();
+  const b = hit || warm_();
+  if (hit) b.cached = true;
+  b.version = BACKEND_VERSION;
+  return b;
 }
 
 /* ---------- Fast cache: Google's CacheService (~50 ms) in front of the Sheet + Gmail ---------- */
@@ -642,18 +658,22 @@ function getSenders() {
   const candidates = [];
   for (let i = 1; i < v.length; i++) {
     if (ruleFor_(rules, String(v[i][0]).toLowerCase())) continue;
+    let kind = String(v[i][5] || 'maybe'), platform = '';
+    if (kind.indexOf('platform') === 0) { platform = kind.split(':')[1] || 'Newsletter'; kind = 'platform'; }
+    else if (kind === 'likely' && PLATFORMS.test(String(v[i][0]))) { platform = platformOf_(String(v[i][0])) || 'Newsletter'; kind = 'platform'; }   // found before platforms were tracked
+    else if (kind === 'likely' && looksPromo_(v[i][0], v[i][2])) kind = 'maybe';
     candidates.push({
       email: v[i][0], name: v[i][1], subject: v[i][2],
-      date: new Date(v[i][3]).getTime(), count: Number(v[i][4] || 1), kind: v[i][5] || 'maybe'
+      date: new Date(v[i][3]).getTime(), count: Number(v[i][4] || 1), kind: kind, platform: platform
     });
   }
-  candidates.sort((a, b) => ((b.kind === 'likely') - (a.kind === 'likely')) || (b.date - a.date));
+  candidates.sort((a, b) => (kindRank_(b.kind) - kindRank_(a.kind)) || (b.date - a.date));
   const senders = Object.keys(rules).map(k => {
     const r = rules[k];
     return { key: k, name: r.name, rule: r.rule, fav: r.fav, count: r.count,
              lastDate: r.lastDate ? new Date(r.lastDate).getTime() : 0 };
   }).sort((a, b) => (b.fav - a.fav) || ((a.rule === 'block') - (b.rule === 'block')) || (b.count - a.count));
-  return { candidates: candidates.slice(0, 60), senders: senders };
+  return { candidates: candidates.slice(0, 100), senders: senders };
 }
 
 function setFav(email, on, name) {
@@ -714,6 +734,18 @@ function allowSender(email, name) {
                  email: email, date: m.getDate().getTime(), unread: m.isUnread() });
   });
   return { count: items.length, items: items };
+}
+
+/** Add several senders at once (the "Add all Substack" button). Stops early, safely, if it nears Apps Script's time limit. */
+function allowSenders(list) {
+  const t0 = Date.now(), items = [], done = [];
+  (list || []).forEach(x => {
+    if (Date.now() - t0 > 4.5 * 60000) return;
+    const r = allowSender(x.email, x.name);
+    done.push(String(x.email).toLowerCase());
+    Array.prototype.push.apply(items, r.items);
+  });
+  return { count: items.length, items: items, done: done };
 }
 
 function ignoreSender(email, name) {
@@ -826,12 +858,14 @@ function deleteHighlight(id) {
  * Only the functions listed in api_() can be called. Everything else is unreachable.
  */
 const API_VERSION = 1;
+// Bump when Code.gs changes in a way users should update for. The app compares it with the newest version.
+const BACKEND_VERSION = 2;
 
 function api_() {
   return {
     bootstrap, listMessages, getBodies, setUnread, setArchived, setSaved, deleteMessage,
     notNewsletter, unfileOne, getSenders, setFav, removeSender, unblock, allowSender,
-    ignoreSender, findMissed, fileOne, setTags, addHighlight, updateHighlight, deleteHighlight,
+    allowSenders, ignoreSender, findMissed, fileOne, setTags, addHighlight, updateHighlight, deleteHighlight,
     scanNow, getSettings, setAutoClean, setSchedule, cleanupPreview, cleanupNow
   };
 }
