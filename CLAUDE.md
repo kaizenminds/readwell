@@ -25,6 +25,13 @@ Readwell is a Gmail newsletter reader. Every user runs their own copy of the bac
 
 Until GitHub Actions + clasp are wired up (roadmap step 5), the live copy is updated by pasting files into the Apps Script editor and publishing a new version of the existing web app deployment (same URL). Verify the editor contents by SHA-256 against the repo before saving.
 
+## API
+
+- `doPost` takes a text/plain JSON body `{key, fn, args}` and only runs functions listed in `api_()`.
+- The key lives in the owner's user properties. `showMyKey()` prints it in the editor log, Settings shows it, `rotateApiKey()` replaces it.
+- `doGet` only serves the reader when the link carries the key (`?k=`). Personal Gmail accounts don't reveal the viewer to the script, so an owner check by email doesn't work.
+- Never change a deployment's access settings without the owner's explicit go-ahead.
+
 ## Key behaviour to preserve
 
 - Daily trigger at `SCAN_HOUR` runs `scan()`: files mail from added senders, lists new candidate senders, then runs cleanup if enabled. `scanNow()` (the Check now button) never cleans up.

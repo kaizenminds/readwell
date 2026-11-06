@@ -1118,6 +1118,9 @@ function renderSettings() {
       '<div class="preview" id="preview"></div></div>' +
     '<div class="card"><h4>' + ico('refresh') + 'Daily scan</h4><p class="hint">Runs every day at ' + st.scanHour + ':00 IST. It files new issues from your added senders and lists new senders for you to review.</p>' +
       '<button class="btn scanbtn">Check now</button></div>' +
+    '<div class="card"><h4>' + ico('sparkle') + 'Readwell app <span class="badge">Beta</span></h4><p class="hint">The installable Readwell app connects to this backend with a private key. Keep it secret: anyone with the key and your API link can read your newsletters.</p>' +
+      '<div class="row" style="justify-content:flex-start"><button class="btn" id="keybtn">Show my app key</button><button class="btn" id="rotbtn">Make a new key</button></div>' +
+      '<div class="preview" id="keybox"></div></div>' +
     '<div class="card"><h4>' + ico('book') + 'Your data</h4><p class="hint">Tags, highlights and sender decisions live in a Google Sheet in your Drive. The newsletters stay in Gmail.</p>' +
       '<div class="row" style="justify-content:flex-start">' + (st.sheetUrl ? '<a class="btn" href="' + esc(st.sheetUrl) + '" target="_blank" rel="noopener">Open data sheet</a>' : '') +
       '<button class="btn" id="clearbtn">Clear this device\'s cache</button></div></div></div>';
@@ -1142,6 +1145,16 @@ function renderSettings() {
       try { const n = await run('cleanupNow'); p.innerHTML = 'Deleted ' + plural(n, 'newsletter') + '.'; toast('Deleted ' + plural(n, 'newsletter')); cacheSet('inbox', null); }
       catch (e) { p.style.display = 'none'; }
     };
+  };
+  const showKey = k => {
+    const b = $('#keybox'); b.style.display = 'block';
+    b.innerHTML = '<div style="font-family:ui-monospace,Menlo,monospace;word-break:break-all;user-select:all;color:var(--ink)">' + esc(k) + '</div><div class="hint" style="margin:8px 0 0">Tap the key to select it, then copy.</div>';
+  };
+  $('#keybtn').onclick = async () => { try { const r = await run('getApiAccess'); showKey(r.key); } catch (e) {} };
+  $('#rotbtn').onclick = async () => {
+    const ok = await confirmBox('Make a new key?', 'The old key stops working right away. Any device using it will need the new one.', 'Make new key');
+    if (!ok) return;
+    try { const k = await run('rotateApiKey'); showKey(k); toast('New key made'); } catch (e) {}
   };
   $('#clearbtn').onclick = () => {
     try { Object.keys(localStorage).filter(k => k.indexOf('nr_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {}

@@ -34,10 +34,24 @@ const SHEETS = {
   Candidates: ['email', 'name', 'lastSubject', 'lastDate', 'count', 'kind']
 };
 
-function doGet() {
+function doGet(e) {
+  // The reader runs with the owner's Gmail access, so it only opens with the owner's key in the link
+  // (?k=...). Personal Gmail accounts don't reveal who is viewing, so the key is the proof.
+  const k = e && e.parameter && e.parameter.k;
+  if (!isOwner_() && !checkKey_(k)) {
+    return HtmlService.createHtmlOutput('<p style="font:15px system-ui;padding:24px">This is a Readwell backend. Open it from the Readwell app, or use your private reader link.</p>')
+      .setTitle('Readwell');
+  }
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('Reader')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+function isOwner_() {
+  try {
+    const me = Session.getEffectiveUser().getEmail(), viewer = Session.getActiveUser().getEmail();
+    return !!viewer && viewer === me;
+  } catch (e) { return false; }
 }
 
 /* ---------- Setup ---------- */
@@ -702,4 +716,70 @@ function deleteHighlight(id) {
   if (row > 0) sheet_('Highlights').deleteRow(row);
   patchBoot_(b => { b.state.highlights = b.state.highlights.filter(x => x.id !== id); });
   return true;
+}
+
+/* ---------- API for the Readwell app ----------
+ * POST a text/plain body: {"key": "...", "fn": "bootstrap", "args": []}
+ * Reply: {"ok": true, "result": ...} or {"ok": false, "error": "..."}
+ * Only the functions listed in api_() can be called. Everything else is unreachable.
+ */
+const API_VERSION = 1;
+
+function api_() {
+  return {
+    bootstrap, listMessages, getBodies, setUnread, setArchived, setSaved, deleteMessage,
+    notNewsletter, unfileOne, getSenders, setFav, removeSender, unblock, allowSender,
+    ignoreSender, findMissed, fileOne, setTags, addHighlight, updateHighlight, deleteHighlight,
+    scanNow, getSettings, setAutoClean, cleanupPreview, cleanupNow
+  };
+}
+
+function doPost(e) {
+  let req;
+  try { req = JSON.parse((e && e.postData && e.postData.contents) || '{}'); }
+  catch (err) { return json_({ ok: false, error: 'Bad request' }); }
+  if (!checkKey_(req.key)) return json_({ ok: false, error: 'Unauthorized' });
+  if (req.fn === 'ping') return json_({ ok: true, result: { app: 'readwell', api: API_VERSION } });
+  const fns = api_();
+  if (!Object.prototype.hasOwnProperty.call(fns, req.fn)) return json_({ ok: false, error: 'Unknown function' });
+  try {
+    return json_({ ok: true, result: fns[req.fn].apply(null, Array.isArray(req.args) ? req.args : []) });
+  } catch (err) {
+    console.error('API ' + req.fn + ': ' + (err && err.stack || err));
+    return json_({ ok: false, error: String((err && err.message) || err) });
+  }
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function newKey_() { return (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, ''); }
+
+function apiKey_() {
+  const p = PropertiesService.getUserProperties();
+  let k = p.getProperty('API_KEY');
+  if (!k) { k = newKey_(); p.setProperty('API_KEY', k); }
+  return k;
+}
+
+/** Constant-time compare, so the key can't be guessed one character at a time. */
+function checkKey_(k) {
+  const real = PropertiesService.getUserProperties().getProperty('API_KEY');
+  if (!real || typeof k !== 'string' || k.length !== real.length) return false;
+  let diff = 0;
+  for (let i = 0; i < real.length; i++) diff |= real.charCodeAt(i) ^ k.charCodeAt(i);
+  return diff === 0;
+}
+
+/** Run from the editor to print your private key (also part of your reader link: add ?k=KEY). */
+function showMyKey() { Logger.log('Your Readwell key: ' + apiKey_()); }
+
+/** Called from Settings in the owner's reader. Never exposed through the API. */
+function getApiAccess() { return { key: apiKey_(), api: API_VERSION }; }
+
+function rotateApiKey() {
+  const k = newKey_();
+  PropertiesService.getUserProperties().setProperty('API_KEY', k);
+  return k;
 }
