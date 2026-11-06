@@ -15,6 +15,10 @@ Each user gets their own backend by copying the Readwell Apps Script template in
 5. **Automation.** GitHub Actions: publish `app/` to GitHub Pages on push (✅ workflow added, needs the repo public and Pages source set to GitHub Actions); publish the backend as an Apps Script library version with `clasp`, so user copies get fixes.
 6. **Beta.** Owner moves onto the new setup first, then invite testers.
 
+## Open source
+
+MIT licensed. Anyone can use the hosted app with their own backend copy, or fork the repo and run their own app. The setup page adapts its links to whichever Pages site serves it; a fork only edits `APP_URL` in `backend/Code.gs`.
+
 ## Later, only if there is demand
 
 - Hosted version with Sign in with Google (needs Google verification and a yearly CASA assessment, about $540 to $720 a year).

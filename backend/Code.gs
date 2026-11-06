@@ -14,7 +14,7 @@ const MIN_WORDS = 600;            // bulk mail at least this long counts as a ne
 const BACKFILL_DAYS = 30;         // how far back setup() looks the first time
 const SCAN_HOUR = 7;              // default daily scan hour; each user changes it in Settings
 const TIMEZONE = 'Asia/Kolkata';  // fallback only; the app sends the device's timezone on connect
-const APP_URL = 'https://kushagraahuja-git.github.io/readwell/';
+const APP_URL = 'https://kushagraahuja-git.github.io/readwell/';   // forked it? point this at your own GitHub Pages site
 const CLEAN_DAYS = 5;             // read newsletters older than this are deleted, unless kept
 
 // Newsletter platforms: mail from these is always a newsletter

@@ -61,7 +61,7 @@ hr{border:0;border-top:1px solid var(--line);margin:34px 0}
       <details id="manual"><summary>Or build it by hand</summary>
         <ul>
           <li>Go to <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> and click <b>New project</b>.</li>
-          <li>Replace everything in <code>Code.gs</code> with <a href="https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs" target="_blank" rel="noopener">this code</a>.</li>
+          <li>Replace everything in <code>Code.gs</code> with <a id="rawcode" href="https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs" target="_blank" rel="noopener">this code</a>.</li>
           <li>Next to <b>Services</b> click <b>+</b>, pick <b>Gmail API</b>, click <b>Add</b>.</li>
           <li>Save with Ctrl+S or Cmd+S.</li>
         </ul>
@@ -123,10 +123,14 @@ hr{border:0;border-top:1px solid var(--line);margin:34px 0}
   <p style="margin-top:34px"><a class="btn ghost" href="./">Back to Readwell</a></p>
 </main>
 <script>
-// Set this to the shared template's link once it exists. Until then the page shows the manual steps.
+// The template and code links follow whichever GitHub Pages site serves this page,
+// so a fork works without editing this file. Only the original site uses the shared template.
+var HOME = 'kushagraahuja-git.github.io';
 var TEMPLATE_URL = 'https://script.google.com/d/1Dy9GjVRZKEKNRYG8A3vxVvSmUTqOBlUCpXK86KAGGTXH9CXRY9Rx4JHa/edit?usp=sharing';
 (function () {
-  if (TEMPLATE_URL) { document.getElementById('tplbtn').href = TEMPLATE_URL; }
+  var h = location.hostname, m = h.match(/^([\w-]+)\.github\.io$/), repo = location.pathname.split('/')[1];
+  if (m && repo) document.getElementById('rawcode').href = 'https://raw.githubusercontent.com/' + m[1] + '/' + repo + '/main/backend/Code.gs';
+  if (TEMPLATE_URL && (h === HOME || !m)) { document.getElementById('tplbtn').href = TEMPLATE_URL; }
   else { document.getElementById('tpl').style.display = 'none'; document.getElementById('manual').open = true; document.querySelector('#manual summary').textContent = 'Build it in the editor'; }
 })();
 </script>
