@@ -1,4 +1,10 @@
-# Set up Readwell (current version)
+# Set up Readwell
+
+The simplest path is the app's setup page: `app/setup.html` (live at https://kushagraahuja-git.github.io/readwell/setup.html once Pages is on). It uses the installable app and needs a deployment with access set to Anyone.
+
+The steps below are the older private-reader path, where the reader is served by your own script and access stays Only myself.
+
+## Private reader path
 
 About 10 minutes. You need a Google account with Gmail.
 
@@ -21,7 +27,7 @@ About 10 minutes. You need a Google account with Gmail.
 
 1. **Deploy** → **New deployment** → type **Web app**.
 2. Execute as **Me**, access **Only myself**. Click **Deploy**.
-3. Open the web app link. That is your reader.
+3. Run `showMyKey` and open the reader link it logs (it ends with `?k=` and your key). That is your reader. The plain link without the key only shows a short note.
 
 ## 4. Put it on your phone
 
@@ -31,5 +37,5 @@ If Google shows "Sorry, unable to open the file", Safari is signed into more tha
 
 ## Settings worth checking
 
-- **Auto-cleanup** is on by default. Open **Settings** → **Preview what would be deleted** before the first daily run.
-- Scan time and timezone are set at the top of `Code.gs` (`SCAN_HOUR`, `TIMEZONE`).
+- **Auto-cleanup** is off until you turn it on in **Settings**. Use **Preview what would be deleted** first.
+- The daily scan runs at 7 AM, Asia/Kolkata, unless you change it: run `setSchedule(21, 'Europe/London')` in the editor, or change it in the app's Settings.

@@ -18,13 +18,13 @@ Everything runs inside your own Google account. Readwell has no servers and neve
 | Part | Where it runs | Folder |
 |---|---|---|
 | Backend: Gmail scan, sender rules, cleanup, storage | Google Apps Script, in the user's own account | `backend/` |
-| App: the reader UI | Today served by Apps Script. Moving to an installable web app (PWA) | `app/` |
+| App: the reader UI | Installable web app (PWA) on GitHub Pages, talks only to the user's own backend. The older reader served by Apps Script still works | `app/` |
 | Data | Gmail labels plus a Google Sheet in the user's Drive | created on setup |
 
 ## Status
 
-Working personal version (v0). Turning it into something anyone can install is in progress. See [docs/roadmap.md](docs/roadmap.md).
+Beta. The installable app and setup page are built; first customer tests are next. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Set it up for yourself (current version)
 
-See [docs/setup.md](docs/setup.md). About 10 minutes.
+Open the setup page in the app (`app/setup.html`), or see [docs/setup.md](docs/setup.md). About 5 minutes.

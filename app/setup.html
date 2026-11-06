@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1014">
+<title>Set up Readwell</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--bg:#0e1014;--panel:#15181d;--raise:#1b1f25;--line:#23272e;--ink:#eceef2;--ink2:#c3c8d0;--muted:#8b929d;--accent:#f2a93b;--accent-bg:rgba(242,169,59,.13);--ok:#4cc38a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:680px;margin:0 auto;padding:32px 16px 80px}
+a{color:var(--accent)}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.mark{width:40px;height:40px;border-radius:11px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.mark svg{width:20px;height:20px;fill:var(--bg)}
+h1{font-size:28px;letter-spacing:-.03em;margin:0}
+.lead{color:var(--ink2);margin:14px 0 26px}
+.why{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:28px;color:var(--ink2);font-size:14px}
+.why b{color:var(--ink)}
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+ol.steps>li{counter-increment:s;position:relative;padding:0 0 26px 46px;border-left:1px solid var(--line);margin-left:15px}
+ol.steps>li:last-child{border-left-color:transparent}
+ol.steps>li::before{content:counter(s);position:absolute;left:-16px;top:-2px;width:31px;height:31px;border-radius:50%;background:var(--raise);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:var(--accent)}
+h2{font-size:17px;margin:0 0 6px}
+.time{color:var(--muted);font-size:12px;font-weight:400;margin-left:6px}
+ul{padding-left:18px;margin:6px 0}
+li{margin:3px 0}
+.btn{display:inline-block;margin:8px 0 4px;padding:10px 16px;border-radius:10px;background:var(--accent);color:var(--bg);font-weight:600;text-decoration:none}
+.btn.ghost{background:var(--raise);color:var(--ink);border:1px solid var(--line)}
+code,.k{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--raise);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.note{background:var(--accent-bg);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--ink2);margin:10px 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+summary{cursor:pointer;font-weight:500}
+.faq h3{font-size:15px;margin:18px 0 4px}
+.faq p{margin:0;color:var(--ink2);font-size:14px}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+.done{color:var(--ok)}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><div class="mark"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></div><h1>Set up Readwell</h1></div>
+  <p class="lead">About 5 minutes, once. Best done on a laptop. After that you can read on any phone, tablet or computer.</p>
+
+  <div class="why"><b>How this works.</b> Readwell has no servers. You make your own copy of its small backend inside your Google account. It reads your Gmail as you, stores your highlights in a Sheet in your Drive, and nobody else, including us, can see any of it.</div>
+
+  <ol class="steps">
+    <li>
+      <h2>Copy the backend <span class="time">1 min</span></h2>
+      <div id="tpl">
+        <ul>
+          <li>Open the template and sign in with the Google account whose Gmail you read newsletters in.</li>
+          <li>Click <b>Overview</b> (the <b>i</b> icon on the left), then <b>Make a copy</b>.</li>
+          <li>Rename the copy to <b>Readwell</b> if you like.</li>
+        </ul>
+        <a class="btn" id="tplbtn" href="#" target="_blank" rel="noopener">Open the Readwell template</a>
+      </div>
+      <details id="manual"><summary>Or build it by hand</summary>
+        <ul>
+          <li>Go to <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> and click <b>New project</b>.</li>
+          <li>Replace everything in <code>Code.gs</code> with <a href="https://raw.githubusercontent.com/kushagraahuja-git/readwell/main/backend/Code.gs" target="_blank" rel="noopener">this code</a>.</li>
+          <li>Next to <b>Services</b> click <b>+</b>, pick <b>Gmail API</b>, keep the name <code>Gmail</code>, click <b>Add</b>.</li>
+          <li>Save with Ctrl+S or Cmd+S.</li>
+        </ul>
+      </details>
+    </li>
+
+    <li>
+      <h2>Run setup <span class="time">1 min</span></h2>
+      <ul>
+        <li>In the function menu at the top, pick <code>setup</code> and click <b>Run</b>.</li>
+        <li>Click <b>Review permissions</b> and choose your account.</li>
+        <li>Google says <i>"Google hasn't verified this app"</i>. That is expected: the app is your own copy, not ours. Click <b>Advanced</b>, then <b>Go to Readwell (unsafe)</b>, then <b>Allow</b>.</li>
+      </ul>
+      <div class="note">Setup makes a Sheet in your Drive, three Gmail labels and a daily scan, then looks back over your recent mail for newsletter senders. It never deletes anything.</div>
+    </li>
+
+    <li>
+      <h2>Deploy it <span class="time">1 min</span></h2>
+      <ul>
+        <li>Click <b>Deploy</b> (top right), then <b>New deployment</b>.</li>
+        <li>Click the gear next to <b>Select type</b> and pick <b>Web app</b>.</li>
+        <li>Execute as: <b>Me</b>. Who has access: <b>Anyone</b>.</li>
+        <li>Click <b>Deploy</b>.</li>
+      </ul>
+      <details><summary>Why "Anyone"? Is that safe?</summary>
+        <p>The Readwell app lives on a different website from Google, so it can't use your Google login to reach your backend. "Anyone" lets the app reach it, and your backend then refuses every request that doesn't carry your private 64-character key. Nobody can guess it.</p>
+        <p>Treat the connect link like a password: don't post it or send it to anyone. If you think it leaked, run <code>rotateApiKey</code> in your script. The old key stops working at once.</p>
+      </details>
+    </li>
+
+    <li>
+      <h2>Connect the app <span class="time">1 min</span></h2>
+      <ul>
+        <li>Back in the editor, pick <code>connectLink</code> in the function menu and click <b>Run</b>.</li>
+        <li>The log at the bottom shows your personal connect link. Open it.</li>
+        <li>Readwell opens, connects and shows your inbox.</li>
+      </ul>
+      <div class="note">To use another device, send that link to yourself (a note or a message to yourself) and open it there. Each device only needs it once.</div>
+    </li>
+
+    <li>
+      <h2>Pick your newsletters <span class="time">1 min</span></h2>
+      <ul>
+        <li>Open <b>Senders</b>. Setup has listed senders that look like newsletters.</li>
+        <li>Tap <b>Add</b> for the ones you want. Their last 5 days come in straight away, and new issues land every morning.</li>
+        <li>Tap <b>Ignore</b> for the rest. Added senders skip your Gmail inbox from then on.</li>
+      </ul>
+    </li>
+
+    <li>
+      <h2>Put it on your home screen</h2>
+      <ul>
+        <li><b>iPhone or iPad:</b> open the connect link in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>.</li>
+        <li><b>Android:</b> in Chrome, tap the menu, then <b>Install app</b>.</li>
+        <li><b>Laptop:</b> in Chrome or Edge, click the install icon in the address bar.</li>
+      </ul>
+      <div class="note">On iPhone and iPad, add it to the home screen from the connect link itself, so the app opens already connected.</div>
+    </li>
+  </ol>
+
+  <hr>
+  <div class="faq">
+    <h2>Good to know</h2>
+    <h3>Will it delete my mail?</h3>
+    <p>Only if you ask. You can delete an issue yourself, and you can turn on auto-cleanup in Settings, which removes read issues after 5 days unless you saved, tagged, starred or highlighted them. It is off until you switch it on.</p>
+    <h3>When does it check for new issues?</h3>
+    <p>Once a day, at 7 AM in your timezone. Change the time in Settings. <b>Check now</b> runs it straight away.</p>
+    <h3>"Could not reach your backend"</h3>
+    <p>Check the deployment's access is <b>Anyone</b>, and that you used the Web app link ending in <code>/exec</code>. Run <code>connectLink</code> again for a fresh link.</p>
+    <h3>"Your backend refused this key"</h3>
+    <p>The key was changed. Run <code>connectLink</code> and open the new link on each device.</p>
+    <h3>I changed the script. Do I need to redeploy?</h3>
+    <p>Yes: <b>Deploy</b>, <b>Manage deployments</b>, pencil icon, Version: <b>New version</b>, <b>Deploy</b>. The link stays the same.</p>
+    <h3>How do I stop using Readwell?</h3>
+    <p>In your script, <b>Deploy</b>, <b>Manage deployments</b>, <b>Archive</b>. Then delete the project and the "Newsletter Reader Data" Sheet. Your Gmail labels stay, so nothing is lost.</p>
+  </div>
+  <p style="margin-top:34px"><a class="btn ghost" href="./">Back to Readwell</a></p>
+</main>
+<script>
+// Set this to the shared template's link once it exists. Until then the page shows the manual steps.
+var TEMPLATE_URL = '';
+(function () {
+  if (TEMPLATE_URL) { document.getElementById('tplbtn').href = TEMPLATE_URL; }
+  else { document.getElementById('tpl').style.display = 'none'; document.getElementById('manual').open = true; document.querySelector('#manual summary').textContent = 'Build it in the editor'; }
+})();
+</script>
+</body>
+</html>

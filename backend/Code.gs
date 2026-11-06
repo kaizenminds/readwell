@@ -12,8 +12,9 @@ const PAGE = 40;
 const REMOVE_FROM_INBOX = true;   // filed newsletters leave your Gmail inbox
 const MIN_WORDS = 600;            // bulk mail at least this long counts as a newsletter
 const BACKFILL_DAYS = 30;         // how far back setup() looks the first time
-const SCAN_HOUR = 7;              // daily scan time (hour, IST)
-const TIMEZONE = 'Asia/Kolkata';
+const SCAN_HOUR = 7;              // default daily scan hour; each user changes it in Settings
+const TIMEZONE = 'Asia/Kolkata';  // fallback only; the app sends the device's timezone on connect
+const APP_URL = 'https://kushagraahuja-git.github.io/readwell/';
 const CLEAN_DAYS = 5;             // read newsletters older than this are deleted, unless kept
 
 // Newsletter platforms: mail from these is always a newsletter
@@ -59,16 +60,15 @@ function isOwner_() {
 /** Run once from the editor, and again after updating the code. */
 function setup() {
   ss_(); label_(LABEL); label_(ARCHIVE_LABEL); label_(SAVED_LABEL);
-  ScriptApp.getProjectTriggers()
-    .filter(t => t.getHandlerFunction() === 'scan')
-    .forEach(t => ScriptApp.deleteTrigger(t));
-  ScriptApp.newTrigger('scan').timeBased().everyDays(1).atHour(SCAN_HOUR).inTimezone(TIMEZONE).create();
+  installTrigger_();
+  apiKey_();
 
   const props = PropertiesService.getUserProperties();
   if (!props.getProperty('SENDERS_BUILT')) { rebuildSenders_(); props.setProperty('SENDERS_BUILT', '1'); }
-  const res = props.getProperty('LAST_SCAN') ? scan() : backfill();
+  const res = props.getProperty('LAST_SCAN') ? scan('manual') : backfill();   // setup never deletes mail
   props.setProperty('LAST_SCAN', String(nowSec_()));
-  Logger.log('Filed ' + res.filed + ' newsletters, found ' + res.found + ' new senders. Daily scan at ' + SCAN_HOUR + ':00. Data: ' + ss_().getUrl());
+  Logger.log('Readwell is set up. Found ' + res.found + ' possible newsletter senders for you to review.');
+  Logger.log('Next: Deploy > New deployment > Web app, Execute as Me, Who has access: Anyone. Then run connectLink.');
 }
 
 /* ---------- Storage ---------- */
@@ -474,8 +474,39 @@ function deleteMessage(id) {
 /* ---------- Auto-cleanup ---------- */
 
 function getSettings() {
+  const p = PropertiesService.getUserProperties(), s = schedule_();
+  // Auto-cleanup deletes mail, so it stays off until the user switches it on.
+  return { autoClean: p.getProperty('AUTO_CLEAN') === 'on', cleanDays: CLEAN_DAYS, scanHour: s.hour, tz: s.tz, sheetUrl: ss_().getUrl() };
+}
+
+/* ---------- Daily scan schedule (per user) ---------- */
+
+function schedule_() {
   const p = PropertiesService.getUserProperties();
-  return { autoClean: p.getProperty('AUTO_CLEAN') !== 'off', cleanDays: CLEAN_DAYS, scanHour: SCAN_HOUR, sheetUrl: ss_().getUrl() };
+  const h = Number(p.getProperty('SCAN_HOUR'));
+  return { hour: p.getProperty('SCAN_HOUR') !== null && h >= 0 && h <= 23 ? h : SCAN_HOUR, tz: p.getProperty('TZ') || TIMEZONE };
+}
+
+function installTrigger_() {
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'scan')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  const s = schedule_();
+  ScriptApp.newTrigger('scan').timeBased().everyDays(1).atHour(s.hour).inTimezone(s.tz).create();
+}
+
+/** From the app: hour 0 to 23 in the user's timezone (an IANA name such as Europe/London). */
+function setSchedule(hour, tz) {
+  const h = Math.round(Number(hour));
+  if (!(h >= 0 && h <= 23)) throw new Error('Pick an hour between 0 and 23');
+  tz = String(tz || '').trim() || schedule_().tz;
+  try { Utilities.formatDate(new Date(), tz, 'HH'); } catch (e) { throw new Error('Unknown timezone: ' + tz); }
+  const p = PropertiesService.getUserProperties();
+  p.setProperty('SCAN_HOUR', String(h));
+  p.setProperty('TZ', tz);
+  installTrigger_();
+  patchBoot_(b => { if (b.state.settings) { b.state.settings.scanHour = h; b.state.settings.tz = tz; } });
+  return getSettings();
 }
 
 function setAutoClean(on) {
@@ -730,7 +761,7 @@ function api_() {
     bootstrap, listMessages, getBodies, setUnread, setArchived, setSaved, deleteMessage,
     notNewsletter, unfileOne, getSenders, setFav, removeSender, unblock, allowSender,
     ignoreSender, findMissed, fileOne, setTags, addHighlight, updateHighlight, deleteHighlight,
-    scanNow, getSettings, setAutoClean, cleanupPreview, cleanupNow
+    scanNow, getSettings, setAutoClean, setSchedule, cleanupPreview, cleanupNow
   };
 }
 
@@ -773,7 +804,20 @@ function checkKey_(k) {
 }
 
 /** Run from the editor to print your private key (also part of your reader link: add ?k=KEY). */
-function showMyKey() { Logger.log('Your Readwell key: ' + apiKey_()); }
+/** Run from the editor after deploying: prints the one-tap link that connects the Readwell app. */
+function connectLink() {
+  const url = ScriptApp.getService().getUrl(), key = apiKey_();
+  if (!url || !/\/exec$/.test(url)) {
+    Logger.log('Deploy Readwell as a web app first: Deploy > New deployment > Web app, Execute as Me, Who has access: Anyone.');
+    Logger.log('Then run connectLink again. (Your key, if you connect by hand: ' + key + ')');
+    return;
+  }
+  Logger.log('Open this link on each device you read on. Keep it private: it contains your key.');
+  Logger.log(APP_URL + '#connect=' + encodeURIComponent(url) + '&key=' + key);
+  Logger.log('Connecting by hand? Backend link: ' + url + '   Key: ' + key);
+}
+
+function showMyKey() { connectLink(); }
 
 /** Called from Settings in the owner's reader. Never exposed through the API. */
 function getApiAccess() { return { key: apiKey_(), api: API_VERSION }; }

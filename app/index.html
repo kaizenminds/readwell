@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<base target="_top">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1014">
+<title>Readwell</title>
+<meta name="description" content="A calm reader for your email newsletters. Runs in your own Google account.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Readwell">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1014;--side:#111318;--panel:#15181d;--raise:#1b1f25;--hover:#1f242b;--sel:#242a33;
+  --line:#23272e;--line2:#2e333b;--ink:#eceef2;--ink2:#c3c8d0;--muted:#8b929d;--faint:#5c636e;
+  --accent:#f2a93b;--accent2:#ffcf7d;--accent-bg:rgba(242,169,59,.13);--danger:#f06b5d;--danger-bg:rgba(240,107,93,.12);
+  --ok:#4cc38a;--blue:#7aa7ff;--blue-bg:rgba(122,167,255,.13);--r:12px;--top:52px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+::selection{background:var(--accent-bg)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#2a2f37;border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.on svg.i.fillable{fill:currentColor}
+
+/* loading bar */
+#bar{position:fixed;top:0;left:0;height:2px;width:100%;z-index:60;overflow:hidden;opacity:0;transition:opacity .2s;pointer-events:none}
+#bar.on{opacity:1}
+#bar::before{content:"";position:absolute;top:0;left:-40%;width:40%;height:100%;background:var(--accent);animation:slide 1s ease-in-out infinite}
+@keyframes slide{to{left:100%}}
+
+/* shell */
+.shell{display:flex;height:100%;height:100dvh}
+.side{width:224px;flex:none;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:0 10px 12px}
+.logo{display:flex;align-items:center;gap:10px;height:var(--top);flex:none;margin:0 -10px 10px;padding:0 20px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;letter-spacing:-.01em}
+.mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e07a2c);display:grid;place-items:center;color:#1a1206;flex:none}
+.mark svg{width:16px;height:16px;stroke:#1a1206;stroke-width:2.2;fill:none}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button,.side-foot button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink2);padding:9px 10px;border-radius:9px;text-align:left;font-weight:500}
+.nav button:hover,.side-foot button:hover{background:var(--hover);color:var(--ink)}
+.nav button.on{background:var(--sel);color:var(--ink)}
+.nav button.on svg{color:var(--accent)}
+.lbl{flex:1}
+.cnt{font-size:11px;color:var(--muted);font-weight:600}
+.cnt.hot:not(:empty){background:var(--accent);color:#1a1206;border-radius:99px;padding:0 7px;line-height:18px}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line);padding-top:10px}
+
+/* list column */
+.col-list{width:30%;min-width:270px;max-width:440px;flex:none;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--panel);min-width:0}
+.lbar{height:var(--top);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--line);flex:none}
+.lbar h2{margin:0;font-size:17px;letter-spacing:-.02em;font-weight:700;display:flex;align-items:baseline;gap:8px}
+.lhead{padding:10px 16px;border-bottom:1px solid var(--line);flex:none}
+.lbar h2 .sub{font-size:12px;color:var(--muted);font-weight:500}
+.search{position:relative}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.search input{width:100%;padding:9px 12px 9px 36px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);outline:none}
+.search input:focus{border-color:var(--accent)}
+.lctl{display:flex;gap:8px;align-items:center;margin-top:10px}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line2);border-radius:9px;padding:2px}
+.seg button{border:0;background:none;color:var(--muted);padding:4px 11px;border-radius:7px;font-size:12px;font-weight:600}
+.seg button.on{background:var(--sel);color:var(--ink)}
+.tagrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1}
+.tagrow::-webkit-scrollbar{display:none}
+.tchip{border:1px solid var(--line2);background:none;color:var(--muted);border-radius:99px;padding:3px 10px;font-size:12px;white-space:nowrap}
+.tchip.on{border-color:var(--accent);color:var(--accent2);background:var(--accent-bg)}
+#list{flex:1;overflow:auto}
+.item{display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);cursor:pointer;position:relative}
+.item:hover{background:var(--hover)}
+.item.sel{background:var(--sel)}
+.item.sel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.av{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;letter-spacing:.02em}
+.ibody{flex:1;min-width:0}
+.irow{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.ifrom{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.idate{flex:none}
+.isubj{margin-top:2px;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item.unread .isubj{color:var(--ink);font-weight:600}
+.item.unread .ifrom{color:var(--ink2)}
+.item.unread .idate{color:var(--accent)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:11px;padding:0 8px;border-radius:99px;background:var(--raise);color:var(--muted);line-height:19px;border:1px solid var(--line2)}
+.star{color:var(--accent);margin-right:3px}
+.empty{color:var(--muted);padding:56px 24px;text-align:center}
+.empty svg{width:34px;height:34px;color:var(--faint);margin-bottom:10px}
+.empty b{display:block;color:var(--ink2);font-weight:600;margin-bottom:4px}
+.more{display:block;margin:14px auto;border:1px solid var(--line2);background:none;color:var(--ink2);padding:7px 16px;border-radius:9px}
+
+/* reader */
+.col-read{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+#rwrap{display:none;flex:1;flex-direction:column;min-height:0}
+body.reading #rwrap{display:flex}
+body.reading #noread{display:none}
+.rbar{display:flex;align-items:center;gap:2px;height:var(--top);padding:0 10px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:15;transition:transform .2s ease}
+#rwrap.bar-up .rbar{transform:translateY(-100%)}
+.ib{position:relative;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:9px;border:0;background:none;color:var(--ink2)}
+.ib:hover{background:var(--hover);color:var(--ink)}
+.ib.on{color:var(--accent)}
+.ib.danger:hover{color:var(--danger);background:var(--danger-bg)}
+.ib .n{position:absolute;top:3px;right:2px;font-size:10px;font-weight:700;color:var(--accent)}
+.ib[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#000;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:40;pointer-events:none}
+.sep{width:1px;height:20px;background:var(--line2);margin:0 6px}
+.grow{flex:1}
+.mob{display:none}
+.rbody{flex:1;display:flex;min-height:0;position:relative}
+#rscroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;min-width:0;background:var(--bg)}
+.rmeta{padding:14px 20px 12px;max-width:860px;margin:0 auto}
+.rfrom{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);min-width:0}
+.rfrom span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rfrom b{color:var(--ink2);font-weight:600}
+.rmeta h1{margin:8px 0;font-size:19px;line-height:1.3;letter-spacing:-.02em;font-weight:700}
+.tagin{display:flex;align-items:center;gap:6px;color:var(--faint)}
+.tagin svg{width:14px;height:14px}
+.tagin input{flex:1;max-width:320px;border:0;border-bottom:1px dashed var(--line2);background:none;padding:3px 2px;font-size:12px;outline:none;color:var(--ink2)}
+.tagin input:focus{border-bottom-color:var(--accent)}
+.paper{position:relative;background:#fff;max-width:860px;margin:0 auto 40px;border-radius:var(--r);overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.45);min-height:60vh}
+iframe{width:100%;height:60vh;border:0;display:block;background:#fff}
+#loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8a8f98;background:#fff;font-size:13px}
+#side{width:300px;flex:none;border-left:1px solid var(--line);overflow:auto;background:var(--panel);display:none}
+body.side-open #side{display:block}
+.side-body{padding:14px}
+body.list-hidden .col-list{display:none}
+.side-h{height:var(--top);display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 16px;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel);z-index:2}
+.hl{background:var(--raise);border:1px solid var(--line);border-left:3px solid #e9c64a;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.hl .t{cursor:pointer;color:var(--ink);font-size:13px;line-height:1.55}
+.hl textarea,.hl input{width:100%;margin-top:8px;border:1px solid var(--line2);border-radius:8px;padding:6px 9px;background:var(--bg);font-size:12px;resize:vertical;outline:none;color:var(--ink2)}
+.hl textarea:focus,.hl input:focus{border-color:var(--accent)}
+.hl .meta{font-size:11px;color:var(--faint);display:flex;justify-content:space-between;margin-top:6px}
+.link{background:none;border:0;padding:0;color:var(--muted);font-size:11px}
+.link:hover{color:var(--danger)}
+#noread{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:6px}
+#noread svg{width:40px;height:40px;color:var(--faint)}
+
+/* menus, modal, toast */
+.menu{display:none;position:absolute;right:14px;top:calc(100% + 4px);z-index:45;background:var(--raise);border:1px solid var(--line2);border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.5);padding:6px;width:300px;max-width:calc(100vw - 28px)}
+.menu.open{display:block}
+.menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 11px;border-radius:8px;color:var(--ink)}
+.menu button:hover{background:var(--hover)}
+.menu small{display:block;color:var(--muted);font-size:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.modal.open{display:flex}
+.modal .box{background:var(--raise);border:1px solid var(--line2);border-radius:16px;padding:22px;width:400px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.modal h3{margin:0 0 8px;font-size:16px}
+.modal p{margin:0 0 18px;color:var(--ink2);font-size:13px}
+.row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.btn{border:1px solid var(--line2);background:var(--raise);color:var(--ink);padding:7px 14px;border-radius:9px;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1a1206;font-weight:600}
+.btn.primary:hover{background:var(--accent2)}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:600}
+.btn.ghost{background:none}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.on{border-color:var(--accent);color:var(--accent2);background:var(--accent-bg)}
+#hlbtn{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);display:none;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.5);padding:10px 20px;border-radius:99px;align-items:center;gap:8px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);background:#f4f5f7;color:#111;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:all .2s;z-index:80;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+#toast.show{opacity:1;transform:translateX(-50%)}
+
+/* wide views: highlights, senders, settings */
+.col-wide{flex:1;overflow:auto;display:none;padding:0 0 80px}
+.wtop{height:var(--top);display:flex;align-items:center;padding:0 32px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.wtop h2{margin:0;font-size:17px;letter-spacing:-.02em}
+body[data-view=highlights] #listcol,body[data-view=highlights] #reader,
+body[data-view=senders] #listcol,body[data-view=senders] #reader,
+body[data-view=settings] #listcol,body[data-view=settings] #reader{display:none}
+body[data-view=highlights] #hlview,body[data-view=senders] #srcview,body[data-view=settings] #setview{display:block}
+.wide{max-width:780px;margin:0 auto;padding:20px 32px 0}
+.wide h2{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+.wide .lead{color:var(--muted);margin:0 0 22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.card h4{margin:0 0 4px;font-size:14px;display:flex;align-items:center;gap:8px}
+.card .hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+.src{display:flex;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.src:first-of-type{border-top:0}
+.src .who{flex:1;min-width:0}
+.src .who div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.src .sub{font-size:12px;color:var(--muted)}
+.src .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.badge{font-size:11px;padding:1px 8px;border-radius:99px;background:var(--raise);color:var(--muted);white-space:nowrap;border:1px solid var(--line2)}
+.badge.allow{color:var(--ok);border-color:rgba(76,195,138,.3);background:rgba(76,195,138,.1)}
+.badge.block{color:var(--danger);border-color:rgba(240,107,93,.3);background:var(--danger-bg)}
+.badge.likely{color:var(--blue);border-color:rgba(122,167,255,.3);background:var(--blue-bg)}
+.searchrow{display:flex;gap:8px}
+.searchrow input{flex:1;padding:8px 12px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);outline:none}
+.searchrow input:focus{border-color:var(--accent)}
+.group{margin-bottom:26px}
+.gtitle{font-weight:600;cursor:pointer;font-size:15px}
+.gtitle:hover{color:var(--accent2)}
+.gfrom{font-size:12px;color:var(--muted);margin:2px 0 10px}
+.setrow{display:flex;gap:16px;align-items:flex-start;justify-content:space-between}
+.switch{width:42px;height:24px;border-radius:99px;border:0;background:var(--line2);position:relative;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+.switch.on{background:var(--accent)}
+.switch.on::after{left:21px}
+.preview{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line2);font-size:13px;display:none}
+.preview ul{margin:8px 0 12px;padding-left:18px;color:var(--ink2)}
+a{color:var(--accent2)}
+a.btn{text-decoration:none;display:inline-block}
+.connect{position:fixed;inset:0;z-index:90;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px 16px;overflow:auto}
+body.need-connect .connect{display:flex}
+body.need-connect .shell,body.need-connect .tabbar{visibility:hidden}
+.cbox{width:420px;max-width:100%;text-align:center}
+.cbox .mark{width:64px;height:64px;border-radius:18px;margin:0 auto 18px}
+.cbox .mark svg{width:32px;height:32px}
+.cbox h1{margin:0 0 6px;font-size:28px;letter-spacing:-.03em}
+.cbox .tag{color:var(--muted);margin:0 0 26px}
+.cbox .wide{display:block;width:100%;text-align:center;padding:12px 16px;font-size:15px}
+.cmsg{display:none;margin:0 0 16px;padding:10px 12px;border-radius:10px;background:var(--accent-bg);color:var(--accent2);font-size:13px;text-align:left}
+.cbox details{margin-top:18px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.cbox summary{cursor:pointer;color:var(--ink2);font-weight:500}
+.cbox label{display:block;font-size:12px;color:var(--muted);margin:12px 0 0}
+.cbox label input{display:block;width:100%;margin-top:4px;padding:9px 11px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);outline:none}
+.cbox label input:focus{border-color:var(--accent)}
+.cbox details .btn{margin-top:14px}
+.cfoot{margin-top:22px;font-size:12px;color:var(--faint)}
+.hoursel{padding:6px 10px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);color:var(--ink)}
+
+/* mobile tab bar */
+.tabbar{display:none}
+
+@media (max-width:1180px){
+  .side{width:68px;padding:0 8px 12px}
+  .side .lbl,.logo span{display:none}
+  .logo{padding:0;margin:0 -8px 10px;justify-content:center}
+  .nav button,.side-foot button{justify-content:center;padding:10px 0;position:relative}
+  .cnt.hot:not(:empty){position:absolute;top:3px;right:6px;font-size:10px;padding:0 5px;line-height:16px}
+  .cnt:not(.hot){display:none}
+  #side{position:absolute;right:0;top:0;bottom:0;z-index:20;box-shadow:-16px 0 40px rgba(0,0,0,.45)}
+  .rmeta{max-width:none;background:var(--panel);border-bottom:1px solid var(--line)}
+  .paper{border-radius:0;box-shadow:none;max-width:none;margin:0;min-height:calc(100vh - var(--top))}
+}
+/* short landscape screens (phones on their side): tighter chrome, more reading space */
+@media (max-height:540px) and (orientation:landscape){
+  :root{--top:44px}
+  .nav button,.side-foot button{padding:7px 0}
+  .lbar h2{font-size:15px}
+  .lhead{padding:8px 12px}
+  .search input{padding:6px 10px 6px 32px}
+  .lctl{margin-top:8px}
+  .item{padding:9px 12px;gap:10px}
+  .av{width:28px;height:28px;font-size:11px}
+  .ib{width:34px;height:34px}
+  .rmeta{padding:10px 16px}
+  .rmeta h1{font-size:16px;margin:4px 0 6px}
+}
+@media (max-width:599px), (max-width:820px) and (orientation:portrait){
+  .side{display:none}
+  .desk{display:none}
+  .col-list{width:100%;border-right:0;padding-bottom:64px}
+  .col-read{display:none}
+  body.reading .col-list{display:none}
+  body.reading .col-read{display:flex}
+  .mob{display:inline-grid}
+  .rbar{padding:env(safe-area-inset-top) 6px 0;height:calc(var(--top) + env(safe-area-inset-top))}
+  .rbar .sep{display:none}
+  .rmeta{padding:12px 16px 10px;max-width:none;background:var(--panel);border-bottom:1px solid var(--line)}
+  .rmeta h1{font-size:18px}
+  .paper{border-radius:0;box-shadow:none;max-width:none;margin:0;min-height:calc(100vh - var(--top))}
+  #side{position:fixed;left:0;right:0;bottom:0;width:auto;max-height:55%;border-left:0;border-top:1px solid var(--line2);border-radius:16px 16px 0 0;z-index:30;box-shadow:0 -16px 40px rgba(0,0,0,.5)}
+  .col-wide{padding:0 0 90px}
+  .wtop{padding:env(safe-area-inset-top) 16px 0;height:calc(var(--top) + env(safe-area-inset-top))}
+  .wide{padding:16px 16px 0}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;background:rgba(17,19,24,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:35}
+  body.reading .tabbar{display:none}
+  .tabbar button{flex:1;border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:4px 0;position:relative}
+  .tabbar button.on{color:var(--accent)}
+  .tabbar .cnt.hot:not(:empty){position:absolute;top:0;left:calc(50% + 6px);font-size:10px;padding:0 5px;line-height:15px}
+  .lbar{padding:env(safe-area-inset-top) 16px 0;height:calc(var(--top) + env(safe-area-inset-top))}
+  .src{flex-wrap:wrap}
+  .src .acts{width:100%;justify-content:flex-start}
+  .ib[data-tip]:hover::after{display:none}
+  #toast{bottom:calc(74px + env(safe-area-inset-bottom))}
+  body.reading #toast{bottom:24px}
+}
+</style>
+</head>
+<body data-view="inbox">
+<div id="bar"></div>
+<div class="shell">
+  <aside class="side">
+    <div class="logo"><div class="mark"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></div><span>Readwell</span></div>
+    <nav class="nav">
+      <button data-v="inbox" class="on" title="Inbox"><i data-i="inbox"></i><span class="lbl">Inbox</span><span class="cnt" id="cnt-inbox"></span></button>
+      <button data-v="saved" title="Saved"><i data-i="bookmark"></i><span class="lbl">Saved</span></button>
+      <button data-v="archive" title="Archive"><i data-i="archive"></i><span class="lbl">Archive</span></button>
+      <button data-v="highlights" title="Highlights"><i data-i="pen"></i><span class="lbl">Highlights</span><span class="cnt" id="cnt-hl"></span></button>
+      <button data-v="senders" title="Senders"><i data-i="users"></i><span class="lbl">Senders</span><span class="cnt hot pendn"></span></button>
+    </nav>
+    <div class="side-foot">
+      <button class="scanbtn" title="Check now"><i data-i="refresh"></i><span class="lbl">Check now</span></button>
+      <button data-v="settings" title="Settings"><i data-i="sliders"></i><span class="lbl">Settings</span></button>
+    </div>
+  </aside>
+
+  <section class="col-list" id="listcol">
+    <div class="lbar"><h2><span id="vtitle">Inbox</span><span class="sub" id="vsub"></span></h2></div>
+    <div class="lhead">
+      <form class="search" id="searchform"><i data-i="search"></i><input id="q" placeholder="Search newsletters" autocomplete="off"></form>
+      <div class="lctl">
+        <div class="seg" id="seg"><button data-m="" class="on">All</button><button data-m="unread">Unread</button><button data-m="fav">★ Favs</button></div>
+        <div class="tagrow" id="tagrow"></div>
+      </div>
+    </div>
+    <div id="list"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="col-read" id="reader">
+    <div id="rwrap">
+     <div class="rbody">
+      <div id="rscroll">
+      <div class="rbar">
+        <button class="ib mob" id="backbtn" aria-label="Back"><i data-i="back"></i></button>
+        <button class="ib desk" id="listbtn" data-tip="Hide inbox"><i data-i="panel"></i></button>
+        <span class="sep desk"></span>
+        <button class="ib" id="savebtn" data-tip="Save"><i data-i="bookmark" data-fill></i></button>
+        <button class="ib" id="favbtn" data-tip="Favourite sender"><i data-i="star" data-fill></i></button>
+        <button class="ib" id="unreadbtn" data-tip="Mark unread"><i data-i="mail"></i></button>
+        <span class="sep"></span>
+        <button class="ib" id="arch" data-tip="Archive"><i data-i="archive"></i></button>
+        <button class="ib danger" id="delbtn" data-tip="Delete forever"><i data-i="trash"></i></button>
+        <span class="grow"></span>
+        <button class="ib" id="sidebtn" data-tip="Highlights"><i data-i="pen"></i><span class="n" id="hln"></span></button>
+        <button class="ib" id="morebtn" data-tip="More"><i data-i="dots"></i></button>
+        <div class="menu" id="nlmenu">
+          <button data-nl="one">Not a newsletter: just this email<small>Back to your Gmail inbox. Sender stays added.</small></button>
+          <button data-nl="block">Not a newsletter: never from this sender<small>All their mail goes back to your inbox.</small></button>
+          <button data-nl="remove">Remove sender and domain<small>Stops them and takes their mail out of the reader.</small></button>
+        </div>
+      </div>
+      <div class="rmeta">
+        <div class="rfrom" id="rfrom"></div>
+        <h1 id="rtitle"></h1>
+        <label class="tagin"><i data-i="tag"></i><input id="tags" placeholder="Add tags"></label>
+      </div>
+      <div class="paper">
+        <iframe id="frame" scrolling="no" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+        <div id="loading">Loading…</div>
+      </div>
+      </div>
+      <aside id="side"></aside>
+     </div>
+    </div>
+    <div id="noread"><i data-i="book"></i><div>Pick a newsletter to start reading</div></div>
+  </section>
+
+  <section class="col-wide" id="hlview"></section>
+  <section class="col-wide" id="srcview"></section>
+  <section class="col-wide" id="setview"></section>
+</div>
+
+<nav class="tabbar">
+  <button data-v="inbox" class="on"><i data-i="inbox"></i>Inbox</button>
+  <button data-v="saved"><i data-i="bookmark"></i>Saved</button>
+  <button data-v="archive"><i data-i="archive"></i>Archive</button>
+  <button data-v="highlights"><i data-i="pen"></i>Highlights</button>
+  <button data-v="senders"><i data-i="users"></i>Senders<span class="cnt hot pendn"></span></button>
+  <button data-v="settings"><i data-i="sliders"></i>Settings</button>
+</nav>
+
+<div class="modal" id="modal"><div class="box"><h3 id="mtitle"></h3><p id="mbody"></p><div class="row"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn danger" id="mok">Delete</button></div></div></div>
+<button id="hlbtn" class="btn primary"><i data-i="pen"></i>Highlight</button>
+<div id="toast"></div>
+<div class="connect" id="connect"><div class="cbox">
+  <div class="mark"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></div>
+  <h1>Readwell</h1>
+  <p class="tag">A calm place to read your newsletters. It runs inside your own Google account, so your mail never leaves it.</p>
+  <div class="cmsg" id="cmsg"></div>
+  <a class="btn primary wide" href="setup.html">Set up Readwell (about 5 minutes)</a>
+  <details id="cmanual"><summary>I already set it up</summary>
+    <label>Backend link<input id="curl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <label>Key<input id="ckey" placeholder="64 letters and numbers" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <button class="btn primary wide" id="cbtn">Connect</button>
+  </details>
+  <div class="cfoot">Tip: the connect link from your script fills this in for you.</div>
+</div></div>
+
+<script>
+/* ---------- Icons ---------- */
+const ICON = {
+  inbox: '<path d="M4 13l2.4-7h11.2L20 13v6H4z"/><path d="M4 13h4.5l1 2h5l1-2H20"/>',
+  bookmark: '<path d="M7 4h10v16l-5-4-5 4z"/>',
+  archive: '<rect x="4" y="5" width="16" height="4" rx="1"/><path d="M6 9v10h12V9M10 13h4"/>',
+  pen: '<path d="M14.5 4.5l5 5L11 18H6v-5z"/><path d="M4 21h8"/>',
+  users: '<circle cx="9" cy="8" r="3"/><path d="M3.5 19c.6-3 2.9-4.8 5.5-4.8s4.9 1.8 5.5 4.8"/><path d="M16 5.3a3 3 0 0 1 0 5.4M17.5 14.6c1.6.6 2.6 2.2 3 4.4"/>',
+  refresh: '<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/>',
+  sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  search: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  star: '<path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>',
+  mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/>',
+  trash: '<path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/>',
+  dots: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+  tag: '<path d="M4 4h7l9 9-7 7-9-9z"/><circle cx="8" cy="8" r="1.3"/>',
+  book: '<path d="M4 5.5C6.5 4.5 9.5 4.5 12 6c2.5-1.5 5.5-1.5 8-.5V19c-2.5-1-5.5-1-8 .5-2.5-1.5-5.5-1.5-8-.5z"/><path d="M12 6v13.5"/>',
+  sparkle: '<path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z"/>',
+  panel: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9.5 4.5v15"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>'
+};
+const ico = (n, fill) => '<svg class="i' + (fill ? ' fillable' : '') + '" viewBox="0 0 24 24">' + (ICON[n] || '') + '</svg>';
+function paintIcons(root) {
+  (root || document).querySelectorAll('i[data-i]').forEach(el => { el.outerHTML = ico(el.dataset.i, el.hasAttribute('data-fill')); });
+}
+paintIcons();
+
+/* ---------- State ---------- */
+const S = {
+  view: 'inbox', mode: '', tagFilter: '', start: 0, items: [], more: false, cur: null,
+  tags: {}, hls: {}, allHl: [], senders: {}, bodies: {}, settings: null,
+  sendersData: null, pending: 0, pendingSenders: 0
+};
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const MOBILE_Q = window.matchMedia('(max-width:599px), (max-width:820px) and (orientation:portrait)');
+const isMobile = () => MOBILE_Q.matches;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fmtDate(t) {
+  const d = new Date(t), now = new Date();
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
+const splitTags = s => String(s || '').split(',').map(t => t.trim()).filter(Boolean);
+const chips = tags => splitTags(tags).map(t => '<span class="chip">' + esc(t) + '</span>').join('');
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+function avatar(name, size) {
+  const s = String(name || '?');
+  let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+  const ini = s.replace(/[^A-Za-z0-9 ]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || s[0].toUpperCase();
+  return '<div class="av" style="background:hsl(' + h + ' 32% 22%);color:hsl(' + h + ' 70% 78%)' + (size ? ';width:' + size + 'px;height:' + size + 'px;border-radius:8px;font-size:10px' : '') + '">' + esc(ini) + '</div>';
+}
+
+/* ---------- Server calls ---------- */
+// run(): waits, shows the loading bar. bg(): fire and forget, the screen is already updated.
+function run(fn, ...args) { return call(true, fn, args); }
+function quiet(fn, ...args) { return call(false, fn, args); }
+/* ---------- Connection to the user's own backend ---------- */
+const CONN = 'rw_conn';
+function getConn() { try { return JSON.parse(localStorage.getItem(CONN) || 'null'); } catch (e) { return null; } }
+function setConn(c) { try { if (c) localStorage.setItem(CONN, JSON.stringify(c)); else localStorage.removeItem(CONN); } catch (e) {} }
+async function rawCall(conn, fn, args) {
+  let r;
+  try {
+    r = await fetch(conn.url, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ key: conn.key, fn: fn, args: args || [] }) });
+  } catch (e) { const err = new Error(navigator.onLine === false ? 'You are offline' : 'Could not reach your backend'); err.code = 'Network'; throw err; }
+  let j;
+  try { j = await r.json(); } catch (e) { const err = new Error('Your backend did not answer'); err.code = 'BadReply'; throw err; }
+  if (!j.ok) { const err = new Error(j.error || 'Request failed'); err.code = j.error; throw err; }
+  return j.result;
+}
+function call(showBar, fn, args) {
+  const conn = getConn();
+  if (!conn) { showConnect(); return Promise.reject(new Error('Not connected')); }
+  if (showBar) { S.pending++; $('#bar').classList.add('on'); }
+  const done = () => { if (showBar && --S.pending <= 0) { S.pending = 0; $('#bar').classList.remove('on'); } };
+  return rawCall(conn, fn, args).then(r => { done(); return r; }, e => {
+    done();
+    if (e.code === 'Unauthorized') showConnect('This device\u2019s key no longer works. Open your new connect link, or paste the new key below.');
+    else toast(e.code === 'Network' || e.code === 'BadReply' ? e.message : 'Something went wrong: ' + e.message);
+    throw e;
+  });
+}
+function bg(fn, ...args) { saveStateSoon(); return quiet(fn, ...args).catch(() => null); }
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function confirmBox(title, body, okLabel) {
+  return new Promise(res => {
+    $('#mtitle').textContent = title; $('#mbody').textContent = body; $('#mok').textContent = okLabel || 'Delete';
+    $('#modal').classList.add('open');
+    const close = v => { $('#modal').classList.remove('open'); res(v); };
+    $('#mok').onclick = () => close(true);
+    $('#mcancel').onclick = () => close(false);
+    $('#modal').onclick = e => { if (e.target.id === 'modal') close(false); };
+  });
+}
+
+/* ---------- Browser cache (instant startup) ---------- */
+function cacheGet(k) { try { return JSON.parse(localStorage.getItem('nr_' + k) || 'null'); } catch (e) { return null; } }
+function cacheSet(k, v) { try { localStorage.setItem('nr_' + k, JSON.stringify(v)); } catch (e) {} }
+function saveState() {
+  cacheSet('state', { tags: S.tags, senders: S.senders, pending: S.pendingSenders || 0, settings: S.settings,
+    highlights: S.allHl.filter(h => String(h.id).indexOf('tmp') !== 0).map(h => ({ id: h.id, messageId: h.messageId,
+      subject: h.subject, sender: h.sender, text: h.text, note: h.note, tags: h.tags, createdAt: h.createdAt })) });
+}
+let saveTimer;
+function saveStateSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 300); }
+// Last 15 opened issues stay in this browser, so reopening them is instant
+function bodyGet(id) { return cacheGet('b_' + id); }
+function bodyDrop(id) { try { localStorage.removeItem('nr_b_' + id); } catch (e) {} }
+function bodyPut(id, b) {
+  const idx = (cacheGet('bidx') || []).filter(x => x !== id);
+  idx.push(id);
+  while (idx.length > 15) bodyDrop(idx.shift());
+  for (let tries = 0; tries < 5; tries++) {
+    try { localStorage.setItem('nr_b_' + id, JSON.stringify(b)); break; }
+    catch (e) { const old = idx.shift(); if (!old || old === id) break; bodyDrop(old); }
+  }
+  cacheSet('bidx', idx);
+}
+
+/* ---------- State helpers ---------- */
+function applyState(st) {
+  S.tags = st.tags || {};
+  S.senders = st.senders || {};
+  S.allHl = st.highlights || [];
+  if (st.settings) S.settings = st.settings;
+  S.hls = {};
+  S.allHl.forEach(h => (S.hls[h.messageId] = S.hls[h.messageId] || []).push(h));
+  setPending(st.pending || 0);
+  renderTagRow(); paintCounts();
+}
+function setPending(n) {
+  S.pendingSenders = Math.max(0, n);
+  $$('.pendn').forEach(el => el.textContent = S.pendingSenders || '');
+  saveStateSoon();
+}
+function paintCounts() {
+  if (S.view === 'inbox' && !S.mode) {
+    const u = S.items.filter(i => i.unread).length;
+    $('#cnt-inbox').textContent = u || '';
+    $('#vsub').textContent = u ? u + ' unread' : '';
+  } else $('#vsub').textContent = '';
+  $('#cnt-hl').textContent = S.allHl.length || '';
+}
+function mergeItems(items) {
+  const have = {}; S.items.forEach(x => have[x.id] = 1);
+  items.forEach(x => { if (!have[x.id]) S.items.push(x); });
+  S.items.sort((a, b) => b.date - a.date);
+  if (S.view === 'inbox') cacheSet('inbox', S.items);
+}
+const isFav = email => !!(S.senders[email] && S.senders[email].fav);
+const favList = () => Object.keys(S.senders).filter(k => S.senders[k].fav && k.indexOf('@') > 0);
+function allTagNames() {
+  const set = {};
+  Object.values(S.tags).forEach(t => splitTags(t).forEach(x => set[x] = 1));
+  S.allHl.forEach(h => splitTags(h.tags).forEach(x => set[x] = 1));
+  return Object.keys(set).sort();
+}
+function renderTagRow() {
+  const tags = allTagNames();
+  if (S.tagFilter && !tags.includes(S.tagFilter)) S.tagFilter = '';
+  $('#tagrow').innerHTML = tags.length ? ['<button class="tchip' + (S.tagFilter ? '' : ' on') + '" data-t="">All tags</button>']
+    .concat(tags.map(t => '<button class="tchip' + (S.tagFilter === t ? ' on' : '') + '" data-t="' + esc(t) + '">#' + esc(t) + '</button>')).join('') : '';
+  $$('#tagrow .tchip').forEach(b => b.onclick = () => { S.tagFilter = b.dataset.t; renderTagRow(); renderList(); });
+}
+
+/* ---------- Views ---------- */
+const TITLES = { inbox: 'Inbox', saved: 'Saved', archive: 'Archive' };
+const isList = () => ['inbox', 'saved', 'archive'].includes(S.view);
+$$('[data-v]').forEach(b => b.onclick = () => setView(b.dataset.v));
+$$('#seg button').forEach(b => b.onclick = () => {
+  S.mode = b.dataset.m;
+  $$('#seg button').forEach(x => x.classList.toggle('on', x === b));
+  loadList(true);
+});
+$('#searchform').onsubmit = e => { e.preventDefault(); refresh(); };
+
+function setView(v) {
+  S.view = v;
+  $$('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.body.dataset.view = v;
+  if (v === 'highlights') renderHlView();
+  else if (v === 'senders') loadSenders(false);
+  else if (v === 'settings') renderSettings();
+  else { $('#vtitle').textContent = TITLES[v]; closeReader(); loadList(true); }
+}
+function refresh() {
+  if (S.view === 'highlights') renderHlView();
+  else if (S.view === 'senders') loadSenders(true);
+  else if (isList()) loadList(true);
+}
+
+async function checkMail() {
+  const btns = $$('.scanbtn'); btns.forEach(b => b.disabled = true);
+  toast('Checking your mail…');
+  try {
+    const r = await run('scanNow');
+    const parts = [];
+    if (r.filed) parts.push(plural(r.filed, 'new newsletter'));
+    if (r.found) parts.push(plural(r.found, 'new sender') + ' to review');
+    toast(parts.length ? parts.join(', ') : 'Nothing new');
+    if (r.found) { setPending(S.pendingSenders + r.found); S.sendersData = null; if (S.view === 'senders') loadSenders(true); }
+    if (r.filed && S.view === 'inbox') loadList(true);
+  } catch (e) {} finally { btns.forEach(b => b.disabled = false); }
+}
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.scanbtn')) checkMail(); });
+
+/* ---------- List ---------- */
+async function loadList(reset) {
+  const view = S.view, mode = S.mode, q = $('#q').value.trim();
+  if (reset) {
+    S.start = 0;
+    const cached = view === 'inbox' && !mode && !q ? cacheGet('inbox') : null;
+    if (cached) { S.items = cached; renderList(); }
+    else { S.items = []; $('#list').innerHTML = '<div class="empty">Loading…</div>'; }
+  }
+  let r;
+  try { r = await run('listMessages', view, q, S.start, mode, favList()); } catch (e) { return; }
+  if (view !== S.view || mode !== S.mode) return;          // user moved on
+  S.items = reset ? r.items : S.items.concat(r.items);
+  S.start += 40; S.more = r.more;
+  if (view === 'inbox' && !mode && !q && reset) cacheSet('inbox', S.items);
+  renderList();
+  prefetch();
+}
+
+function emptyState() {
+  if (S.view === 'archive') return ['archive', 'Nothing archived', 'Issues you archive end up here.'];
+  if (S.view === 'saved') return ['bookmark', 'Nothing saved', 'Tap the bookmark on any issue to keep it here.'];
+  if (S.mode === 'fav') return ['star', 'No favourites yet', 'Star a sender from any issue.'];
+  if (S.pendingSenders) return ['users', 'All caught up', plural(S.pendingSenders, 'new sender') + ' waiting for you in Senders.'];
+  return ['sparkle', 'All caught up', 'New issues arrive with the daily scan at ' + ((S.settings && S.settings.scanHour) || 7) + ':00.'];
+}
+
+function renderList() {
+  const tf = S.tagFilter;
+  const items = S.items.filter(i => !tf || splitTags(S.tags[i.id]).includes(tf));
+  let h = items.map(i =>
+    '<div class="item' + (i.unread ? ' unread' : '') + (S.cur && S.cur.id === i.id ? ' sel' : '') + '" data-id="' + esc(i.id) + '">' +
+      avatar(i.from) +
+      '<div class="ibody"><div class="irow"><span class="ifrom">' + (isFav(i.email) ? '<span class="star">★</span>' : '') + esc(i.from) + '</span>' +
+      '<span class="idate">' + (i.unread ? '<span class="dot"></span>' : '') + fmtDate(i.date) + '</span></div>' +
+      '<div class="isubj">' + esc(i.subject) + '</div>' +
+      (S.tags[i.id] ? '<div class="chips">' + chips(S.tags[i.id]) + '</div>' : '') +
+    '</div></div>').join('');
+  if (!items.length) { const e = emptyState(); h = '<div class="empty">' + ico(e[0]) + '<b>' + esc(e[1]) + '</b>' + esc(e[2]) + '</div>'; }
+  if (S.more) h += '<button class="more" id="morebtn2">Load more</button>';
+  $('#list').innerHTML = h;
+  $$('#list .item').forEach(el => el.onclick = () => openMsg(el.dataset.id));
+  const mb = $('#morebtn2'); if (mb) mb.onclick = () => { mb.textContent = 'Loading…'; loadList(false); };
+  paintCounts();
+}
+
+// Fetch the next few bodies in the background so opening them is instant
+let prefetching = false;
+async function prefetch() {
+  if (prefetching) return;
+  const ids = S.items.filter(i => !S.bodies[i.id] && !bodyGet(i.id)).slice(0, 6).map(i => i.id);
+  if (!ids.length) return;
+  prefetching = true;
+  try { Object.assign(S.bodies, await quiet('getBodies', ids)); } catch (e) {}
+  prefetching = false;
+}
+
+/* ---------- Reader ---------- */
+const frame = $('#frame');
+frame.onload = setupFrame;
+
+function buildDoc(id, html) {
+  return '<!doctype html><html><head><meta charset="utf-8"><base target="_blank">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><style>' +
+    'html,body{height:auto!important;min-height:0!important;overflow:hidden!important}' +
+    'body{max-width:760px;margin:0 auto;padding:20px 16px 40px;overflow-wrap:break-word}' +
+    'img{max-width:100%!important;height:auto!important}table{max-width:100%!important}' +
+    'mark.nr-hl,mark.nr-hl *{background:#ffe58a!important;color:inherit!important;border-radius:2px;cursor:pointer}' +
+    '</style></head><body data-nrid="' + esc(id) + '">' + html + '</body></html>';
+}
+
+function openMsg(id) {
+  const item = S.items.find(x => x.id === id) || {};
+  S.cur = { id: id, subject: item.subject || '', from: item.from || '', email: item.email || '', date: item.date, saved: false, archived: S.view === 'archive' };
+  document.body.classList.add('reading');
+  $('#rscroll').scrollTop = 0; $('#rwrap').classList.remove('bar-up'); frame.style.height = '';
+  $('#nlmenu').classList.remove('open');
+  $('#rfrom').innerHTML = avatar(S.cur.from, 26) + '<span><b>' + esc(S.cur.from) + '</b>' + (S.cur.email ? ' · ' + esc(S.cur.email) : '') + (S.cur.date ? ' · ' + fmtDate(S.cur.date) : '') + '</span>';
+  $('#rtitle').textContent = S.cur.subject;
+  $('#tags').value = S.tags[id] || '';
+  if (isMobile()) document.body.classList.remove('side-open');
+  else if ((S.hls[id] || []).length && window.innerWidth > 1180) document.body.classList.add('side-open');
+  paintToggles(); renderSide(); hideBtn();
+  if (item.unread) { item.unread = false; bg('setUnread', id, false); }
+  renderList();
+  const body = S.bodies[id] || bodyGet(id);
+  if (body) showBody(id, body);
+  else {
+    $('#loading').textContent = 'Loading…'; $('#loading').style.display = 'flex';
+    frame.srcdoc = buildDoc('', '');
+    run('getBodies', [id]).then(r => {
+      Object.assign(S.bodies, r);
+      if (S.cur && S.cur.id === id) {
+        if (r[id]) showBody(id, r[id]);
+        else $('#loading').textContent = 'This email is no longer available';
+      }
+    }).catch(() => {});
+  }
+  prefetch();
+}
+
+function showBody(id, b) {
+  S.bodies[id] = b; bodyPut(id, b);
+  S.cur.saved = b.saved; S.cur.archived = b.archived;
+  paintToggles();
+  $('#loading').style.display = 'none';
+  frame.srcdoc = buildDoc(id, b.html);
+}
+
+function closeReader() {
+  document.body.classList.remove('reading');
+  S.cur = null; hideBtn(); $('#nlmenu').classList.remove('open');
+  if (isMobile() || window.innerWidth <= 1180) document.body.classList.remove('side-open');
+  if (document.body.classList.contains('list-hidden')) setListHidden(false);
+  renderList();
+}
+$('#backbtn').onclick = closeReader;
+$('#sidebtn').onclick = () => document.body.classList.toggle('side-open');
+function setListHidden(on) {
+  document.body.classList.toggle('list-hidden', on);
+  $('#listbtn').classList.toggle('on', on);
+  $('#listbtn').dataset.tip = on ? 'Show inbox' : 'Hide inbox';
+}
+$('#listbtn').onclick = () => setListHidden(!document.body.classList.contains('list-hidden'));
+
+function setupFrame() {
+  const doc = frame.contentDocument;
+  if (!doc || !doc.body || !S.cur || doc.body.dataset.nrid !== S.cur.id || doc.__nr) return;
+  doc.__nr = true;
+  (S.hls[S.cur.id] || []).forEach(h => markSaved(doc, h));
+  fitFrame(doc);
+  try { new ResizeObserver(() => fitFrame(doc)).observe(doc.body); } catch (e) {}
+  doc.querySelectorAll('img').forEach(im => im.addEventListener('load', () => fitFrame(doc)));
+  // Links open in the browser, never inside the reader
+  doc.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+  doc.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (a) {
+      e.preventDefault();
+      if (doc.getSelection().toString().trim()) return;
+      const href = a.getAttribute('href') || '';
+      if (/^(https?:|mailto:)/i.test(href)) window.open(href, '_blank', 'noopener');
+      return;
+    }
+    const mk = e.target.closest && e.target.closest('mark.nr-hl');
+    if (mk) {
+      document.body.classList.add('side-open');
+      const el = document.getElementById('h-' + mk.dataset.id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, true);
+  let timer;
+  const check = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const sel = doc.getSelection(); const t = sel ? sel.toString().trim() : '';
+      $('#hlbtn').style.display = t.length > 2 ? 'inline-flex' : 'none';
+    }, 120);
+  };
+  doc.addEventListener('selectionchange', check);
+  doc.addEventListener('mouseup', check);
+  doc.addEventListener('touchend', check);
+}
+function hideBtn() { $('#hlbtn').style.display = 'none'; }
+// The newsletter grows to its full height so the whole reader scrolls as one page
+function fitFrame(doc) {
+  if (!doc || !doc.body || frame.contentDocument !== doc) return;
+  const h = Math.ceil(Math.max(doc.body.getBoundingClientRect().bottom, doc.body.scrollHeight)) + 8;
+  if (Math.abs(frame.offsetHeight - h) > 4) frame.style.height = h + 'px';
+}
+function scrollToMark(mk) {
+  const sc = $('#rscroll');
+  const y = frame.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop + mk.getBoundingClientRect().top - 120;
+  sc.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
+// Toolbar slides away while reading down, comes back on the way up
+let lastY = 0;
+$('#rscroll').addEventListener('scroll', () => {
+  const y = $('#rscroll').scrollTop;
+  if (y > lastY + 6 && y > 120) $('#rwrap').classList.add('bar-up');
+  else if (y < lastY - 6 || y < 60) $('#rwrap').classList.remove('bar-up');
+  lastY = y;
+}, { passive: true });
+
+/* ---------- Highlighting ---------- */
+// Map of every non-space character in the email to its text node + offset.
+// Matching ignores whitespace, so highlights survive line breaks, links and styling.
+function textMap(doc) {
+  const w = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+  const map = []; let s = '', n;
+  while ((n = w.nextNode())) {
+    const p = n.parentNode && n.parentNode.nodeName;
+    if (p === 'STYLE' || p === 'SCRIPT' || p === 'TITLE') continue;
+    const t = n.nodeValue;
+    for (let i = 0; i < t.length; i++) if (!/\s/.test(t[i])) { s += t[i]; map.push([n, i]); }
+  }
+  return { s: s, map: map };
+}
+const squash = t => String(t).replace(/\s+/g, '');
+
+function wrapSpan(doc, map, i, j, id) {
+  const segs = [];
+  for (let k = i; k <= j; k++) {
+    const [n, o] = map[k], last = segs[segs.length - 1];
+    if (last && last.n === n) last.e = o + 1; else segs.push({ n: n, s: o, e: o + 1 });
+  }
+  segs.forEach(g => {
+    let node = g.n;
+    if (g.e < node.nodeValue.length) node.splitText(g.e);
+    if (g.s > 0) node = node.splitText(g.s);
+    const mk = doc.createElement('mark'); mk.className = 'nr-hl'; mk.dataset.id = id;
+    node.parentNode.insertBefore(mk, node); mk.appendChild(node);
+  });
+  return segs.length > 0;
+}
+
+function markSaved(doc, h) {
+  const q = squash(h.text); if (!q) return false;
+  const tm = textMap(doc);
+  const i = tm.s.indexOf(q); if (i < 0) return false;
+  return wrapSpan(doc, tm.map, i, i + q.length - 1, h.id);
+}
+
+function unmark(doc, id) {
+  doc.querySelectorAll('mark.nr-hl[data-id="' + id + '"]').forEach(mk => {
+    while (mk.firstChild) mk.parentNode.insertBefore(mk.firstChild, mk);
+    mk.remove();
+  });
+  doc.body.normalize();
+}
+
+$('#hlbtn').onclick = () => {
+  const doc = frame.contentDocument, sel = doc && doc.getSelection();
+  hideBtn();
+  if (!S.cur || !sel || !sel.rangeCount) return;
+  const r = sel.getRangeAt(0), text = sel.toString().replace(/\s+/g, ' ').trim();
+  if (text.length < 3) return;
+  const tm = textMap(doc);
+  let i = -1, j = -1;
+  for (let k = 0; k < tm.map.length; k++) {
+    const [n, o] = tm.map[k];
+    let inside = false;
+    try { inside = r.comparePoint(n, o) === 0 && r.comparePoint(n, o + 1) === 0; } catch (e) {}
+    if (inside) { if (i < 0) i = k; j = k; } else if (i >= 0) break;
+  }
+  if (i < 0) { toast('Could not highlight that selection'); return; }
+  const tmp = 'tmp' + Date.now();
+  wrapSpan(doc, tm.map, i, j, tmp);
+  sel.removeAllRanges();
+  const h = { id: tmp, messageId: S.cur.id, subject: S.cur.subject, sender: S.cur.from, text: text, note: '', tags: '', createdAt: Date.now() };
+  (S.hls[h.messageId] = S.hls[h.messageId] || []).unshift(h);
+  S.allHl.unshift(h);
+  if (!isMobile()) document.body.classList.add('side-open');
+  renderSide(); paintCounts();
+  h.ready = quiet('addHighlight', h).then(id => {
+    doc.querySelectorAll('mark[data-id="' + tmp + '"]').forEach(m => m.dataset.id = id);
+    const card = document.getElementById('h-' + tmp); if (card) { card.id = 'h-' + id; card.dataset.id = id; }
+    h.id = id; saveStateSoon(); return id;
+  }).catch(() => {
+    unmark(doc, tmp);
+    S.hls[h.messageId] = (S.hls[h.messageId] || []).filter(x => x !== h);
+    S.allHl = S.allHl.filter(x => x !== h);
+    renderSide(); paintCounts();
+  });
+};
+
+function hlCard(h) {
+  return '<div class="hl" id="h-' + esc(h.id) + '" data-id="' + esc(h.id) + '">' +
+    '<div class="t">' + esc(h.text) + '</div>' +
+    '<textarea rows="2" class="note" placeholder="Add a note">' + esc(h.note) + '</textarea>' +
+    '<input class="htags" placeholder="Tags" value="' + esc(h.tags) + '">' +
+    '<div class="meta"><span>' + fmtDate(h.createdAt) + '</span><button class="link del">Delete</button></div>' +
+  '</div>';
+}
+
+function bindCards(container, inReader) {
+  container.querySelectorAll('.hl').forEach(el => {
+    const h = S.allHl.find(x => x.id === el.dataset.id); if (!h) return;
+    const save = async () => {
+      const note = el.querySelector('.note').value;
+      const tags = splitTags(el.querySelector('.htags').value.toLowerCase()).join(', ');
+      if (note === h.note && tags === h.tags) return;
+      h.note = note; h.tags = tags; el.querySelector('.htags').value = tags;
+      renderTagRow(); toast('Saved');
+      const id = h.ready ? await h.ready : h.id;
+      if (id) bg('updateHighlight', id, note, tags);
+    };
+    el.querySelector('.note').onblur = save;
+    el.querySelector('.htags').onchange = save;
+    el.querySelector('.del').onclick = async () => {
+      S.allHl = S.allHl.filter(x => x !== h);
+      S.hls[h.messageId] = (S.hls[h.messageId] || []).filter(x => x !== h);
+      if (inReader) { unmark(frame.contentDocument, h.id); renderSide(); } else renderHlView();
+      paintCounts(); toast('Highlight deleted');
+      const id = h.ready ? await h.ready : h.id;
+      if (id) bg('deleteHighlight', id);
+    };
+    if (inReader) el.querySelector('.t').onclick = () => {
+      const mk = frame.contentDocument.querySelector('mark[data-id="' + h.id + '"]');
+      if (mk) scrollToMark(mk);
+    };
+  });
+}
+
+function renderSide() {
+  if (!S.cur) return;
+  const list = S.hls[S.cur.id] || [];
+  $('#hln').textContent = list.length || '';
+  $('#side').innerHTML = '<div class="side-h"><span>Highlights · ' + list.length + '</span><button class="ib" id="sideclose" aria-label="Close">' + ico('x') + '</button></div><div class="side-body">' +
+    (list.length ? list.map(hlCard).join('') : '<div style="color:var(--muted);font-size:13px">Select any text in the newsletter, then tap Highlight.</div>') + '</div>';
+  $('#sideclose').onclick = () => document.body.classList.remove('side-open');
+  bindCards($('#side'), true);
+}
+
+/* ---------- Reader actions (instant, saved in the background) ---------- */
+function paintToggles() {
+  const m = S.cur; if (!m) return;
+  $('#savebtn').classList.toggle('on', !!m.saved);
+  $('#savebtn').dataset.tip = m.saved ? 'Saved' : 'Save';
+  const fav = isFav(m.email);
+  $('#favbtn').classList.toggle('on', fav);
+  $('#favbtn').dataset.tip = fav ? 'Favourite sender' : 'Favourite this sender';
+  $('#arch').dataset.tip = m.archived ? 'Move back to Inbox' : 'Archive';
+}
+
+$('#tags').onchange = () => {
+  if (!S.cur) return;
+  const tags = splitTags($('#tags').value.toLowerCase()).join(', ');
+  $('#tags').value = tags;
+  if (tags) S.tags[S.cur.id] = tags; else delete S.tags[S.cur.id];
+  renderList(); renderTagRow(); toast('Tags saved');
+  bg('setTags', S.cur.id, tags);
+};
+
+$('#savebtn').onclick = () => {
+  const m = S.cur; if (!m) return;
+  m.saved = !m.saved;
+  if (S.bodies[m.id]) { S.bodies[m.id].saved = m.saved; bodyPut(m.id, S.bodies[m.id]); }
+  paintToggles(); toast(m.saved ? 'Saved' : 'Removed from Saved');
+  if (S.view === 'saved' && !m.saved) { S.items = S.items.filter(x => x.id !== m.id); renderList(); }
+  bg('setSaved', m.id, m.saved);
+};
+
+$('#favbtn').onclick = () => {
+  const m = S.cur; if (!m || !m.email) return;
+  const on = !isFav(m.email);
+  S.senders[m.email] = Object.assign({}, S.senders[m.email] || { rule: '' }, { fav: on });
+  if (on && !S.senders[m.email].rule) S.senders[m.email].rule = 'allow';
+  paintToggles(); renderList();
+  toast(on ? m.from + ' is a favourite' : 'Removed from favourites');
+  bg('setFav', m.email, on, m.from);
+};
+
+function dropItems(pred) {
+  S.items.filter(pred).forEach(x => { delete S.bodies[x.id]; bodyDrop(x.id); });
+  S.items = S.items.filter(x => !pred(x));
+  cacheSet('inbox', null);
+}
+
+$('#unreadbtn').onclick = () => {
+  const m = S.cur; if (!m) return;
+  const it = S.items.find(x => x.id === m.id); if (it) it.unread = true;
+  closeReader(); toast('Marked unread');
+  bg('setUnread', m.id, true);
+};
+
+$('#arch').onclick = () => {
+  const m = S.cur; if (!m) return;
+  const on = !m.archived;
+  dropItems(x => x.id === m.id);
+  closeReader(); toast(on ? 'Archived' : 'Moved back to Inbox');
+  bg('setArchived', m.id, on);
+};
+
+$('#delbtn').onclick = async () => {
+  const m = S.cur; if (!m) return;
+  const ok = await confirmBox('Delete forever?', 'This permanently deletes the email from Gmail. It does not go to Trash and cannot be recovered.', 'Delete forever');
+  if (!ok) return;
+  const hs = S.hls[m.id] || [];
+  if (hs.length) { S.allHl = S.allHl.filter(h => h.messageId !== m.id); delete S.hls[m.id]; }
+  delete S.tags[m.id];
+  dropItems(x => x.id === m.id);
+  closeReader(); paintCounts(); toast('Deleted');
+  bg('deleteMessage', m.id);
+};
+
+$('#morebtn').onclick = e => { e.stopPropagation(); $('#nlmenu').classList.toggle('open'); };
+document.addEventListener('click', e => { if (!e.target.closest('#nlmenu') && !e.target.closest('#morebtn')) $('#nlmenu').classList.remove('open'); });
+
+const domainOf = email => (String(email).split('@')[1] || '');
+function rootDomain(d) {
+  const p = d.split('.'); if (p.length <= 2) return d;
+  const two = p[p.length - 1].length === 2 && /^(co|com|net|org|gov|ac|edu)$/.test(p[p.length - 2]);
+  return p.slice(two ? -3 : -2).join('.');
+}
+const SHARED = /(^|\.)(gmail|googlemail|yahoo|outlook|hotmail|live|icloud|me|proton|protonmail|rediffmail|substack|beehiiv|ghost|buttondown|mailerlite|convertkit|kit)\.[a-z.]+$/i;
+
+$$('#nlmenu button').forEach(b => b.onclick = () => {
+  const m = S.cur; if (!m) return;
+  $('#nlmenu').classList.remove('open');
+  const kind = b.dataset.nl;
+  if (kind === 'one') {
+    dropItems(x => x.id === m.id);
+    toast('Sent back to your inbox');
+    bg('unfileOne', m.id);
+  } else if (kind === 'block') {
+    dropItems(x => x.email === m.email);
+    S.senders[m.email] = { fav: false, rule: 'block' };
+    toast(m.from + ' blocked. Their mail is back in your inbox');
+    bg('notNewsletter', m.id);
+  } else {
+    const d = domainOf(m.email);
+    const scope = SHARED.test(d) ? m.email : rootDomain(d);
+    dropItems(x => x.email === m.email || (scope !== m.email && (x.email.endsWith('@' + scope) || x.email.endsWith('.' + scope))));
+    S.senders[m.email] = { fav: false, rule: 'block' };
+    toast('Removed ' + scope);
+    bg('removeSender', m.email, m.from);
+  }
+  S.sendersData = null;
+  closeReader();
+});
+
+/* ---------- Senders ---------- */
+const sAct = (a, e, n, label, cls) =>
+  '<button class="btn sm ' + (cls || '') + '" data-a="' + a + '" data-e="' + esc(e) + '" data-n="' + esc(n || '') + '">' + label + '</button>';
+
+async function loadSenders(force) {
+  if (!S.sendersData || force) {
+    if (!S.sendersData) $('#srcview').innerHTML = '<div class="wtop"><h2>Senders</h2></div><div class="wide"><div class="empty">Loading…</div></div>';
+    try { S.sendersData = await run('getSenders'); } catch (e) { return; }
+  }
+  if (S.view === 'senders') renderSenders();
+}
+
+function senderRow(x) {
+  const blocked = x.rule === 'block', domain = x.key.charAt(0) === '@';
+  const badge = blocked ? '<span class="badge block">' + (domain ? 'Domain removed' : 'Removed') + '</span>'
+    : x.rule === 'allow' ? '<span class="badge allow">Added</span>' : '';
+  const meta = x.count ? plural(x.count, 'issue') + (x.lastDate ? ' · last ' + fmtDate(x.lastDate) : '') : esc(x.key);
+  const acts = blocked ? sAct('unblock', x.key, x.name, 'Undo')
+    : (domain ? '' : sAct(x.fav ? 'unfav' : 'fav', x.key, x.name, x.fav ? '★ Favourite' : '☆ Favourite', x.fav ? 'on' : '') +
+       sAct('remove', x.key, x.name, 'Remove'));
+  return '<div class="src">' + avatar(x.name || x.key) + '<div class="who"><div>' + (x.fav ? '<span class="star">★</span>' : '') + esc(x.name || x.key) +
+    '</div><div class="sub">' + meta + '</div></div>' + badge + '<div class="acts">' + acts + '</div></div>';
+}
+
+function renderSenders() {
+  const d = S.sendersData, q = $('#missq') ? $('#missq').value : '', res = $('#missres') ? $('#missres').innerHTML : '';
+  const cand = d.candidates.map(c =>
+    '<div class="src">' + avatar(c.name) + '<div class="who"><div>' + esc(c.name) + ' <span class="sub">' + esc(c.email) + '</span></div>' +
+    '<div class="sub">' + esc(c.subject) + ' · ' + fmtDate(c.date) + (c.count > 1 ? ' · ' + plural(c.count, 'email') : '') + '</div></div>' +
+    (c.kind === 'likely' ? '<span class="badge likely">Likely newsletter</span>' : '') +
+    '<div class="acts">' + sAct('allow', c.email, c.name, 'Add', 'primary') + sAct('ignore', c.email, c.name, 'Ignore') + '</div></div>').join('');
+  const added = d.senders.filter(x => x.rule !== 'block'), removed = d.senders.filter(x => x.rule === 'block');
+  $('#srcview').innerHTML = '<div class="wtop"><h2>Senders</h2></div><div class="wide"><p class="lead">Decide who makes it into your reader. Everything here takes effect immediately.</p>' +
+    '<div class="card"><h4>New senders to review' + (d.candidates.length ? ' <span class="badge">' + d.candidates.length + '</span>' : '') + '</h4>' +
+      '<p class="hint">Found by the daily scan. Add pulls in their last 5 days now, and every new issue after that. Ignore means they are never suggested again.</p>' +
+      (cand || '<div class="sub" style="color:var(--muted)">Nothing to review. Check now finds new ones.</div>') + '</div>' +
+    '<div class="card"><h4>Find a newsletter</h4><p class="hint">Search the last 6 months of your mail for anything not in the reader yet. Try a name, a domain, or from:ft.com.</p>' +
+      '<form class="searchrow" id="missform"><input id="missq" placeholder="e.g. stratechery, morning brew, from:ft.com"><button class="btn primary">Search</button></form>' +
+      '<div id="missres" style="margin-top:8px"></div></div>' +
+    '<div class="card"><h4>Your senders <span class="badge">' + added.length + '</span></h4>' +
+      '<p class="hint">Remove stops a sender and its whole company domain, so news.brand.com and offers.brand.com go too. Shared domains like Gmail or Substack only lose that one address.</p>' +
+      (added.map(senderRow).join('') || '<div class="sub" style="color:var(--muted)">No senders yet.</div>') + '</div>' +
+    (removed.length ? '<div class="card"><h4>Removed and ignored <span class="badge">' + removed.length + '</span></h4>' + removed.map(senderRow).join('') + '</div>' : '') +
+    '</div>';
+  $('#missq').value = q; $('#missres').innerHTML = res;
+  $('#missform').onsubmit = e => { e.preventDefault(); searchMissed(); };
+  bindSenderActs($('#srcview'));
+}
+
+function upsertSender(key, name, patch) {
+  let s = S.sendersData.senders.find(x => x.key === key);
+  if (!s) { s = { key: key, name: name, rule: '', fav: false, count: 0, lastDate: 0 }; S.sendersData.senders.push(s); }
+  Object.assign(s, patch);
+}
+
+function bindSenderActs(root) {
+  root.querySelectorAll('button[data-a]').forEach(b => b.onclick = () => {
+    const e = b.dataset.e, n = b.dataset.n, a = b.dataset.a, d = S.sendersData;
+    const dropCand = () => {
+      const before = d.candidates.length;
+      d.candidates = d.candidates.filter(c => c.email !== e);
+      if (d.candidates.length < before) setPending(S.pendingSenders - 1);
+    };
+    if (a === 'allow') {
+      dropCand(); upsertSender(e, n, { rule: 'allow' });
+      S.senders[e] = { fav: false, rule: 'allow' };
+      toast('Added ' + n + '. Pulling in their last 5 days…');
+      quiet('allowSender', e, n).then(r => {
+        mergeItems(r.items);
+        upsertSender(e, n, { count: r.count });
+        if (isList()) renderList(); else if (S.view === 'senders') renderSenders();
+        toast(r.count ? n + ': ' + plural(r.count, 'newsletter') + ' added to your Inbox' : n + ' added. New issues arrive with the daily scan.');
+      }).catch(() => {});
+    } else if (a === 'ignore') {
+      dropCand(); upsertSender(e, n, { rule: 'block' });
+      S.senders[e] = { fav: false, rule: 'block' };
+      toast('Ignored ' + n);
+      bg('ignoreSender', e, n);
+    } else if (a === 'fav' || a === 'unfav') {
+      const on = a === 'fav';
+      upsertSender(e, n, on ? { fav: true, rule: 'allow' } : { fav: false });
+      S.senders[e] = Object.assign({}, S.senders[e] || {}, { fav: on, rule: on ? 'allow' : (S.senders[e] || {}).rule || '' });
+      toast(on ? 'Added to favourites' : 'Removed from favourites');
+      bg('setFav', e, on, n);
+    } else if (a === 'remove') {
+      const dm = domainOf(e), scope = SHARED.test(dm) ? e : rootDomain(dm);
+      upsertSender(e, n, { rule: 'block', fav: false });
+      if (scope !== e) upsertSender('@' + scope, n, { rule: 'block' });
+      S.senders[e] = { fav: false, rule: 'block' };
+      dropItems(x => x.email === e || (scope !== e && (x.email.endsWith('@' + scope) || x.email.endsWith('.' + scope))));
+      toast('Removed ' + scope);
+      bg('removeSender', e, n);
+    } else if (a === 'unblock') {
+      if (e.charAt(0) === '@') d.senders = d.senders.filter(x => x.key !== e);
+      else upsertSender(e, n, { rule: '' });
+      if (S.senders[e]) S.senders[e].rule = '';
+      toast('Undone');
+      bg('unblock', e);
+    } else if (a === 'one') {
+      b.textContent = 'Added'; b.disabled = true;
+      toast('Added to your Inbox');
+      bg('fileOne', e);
+      return;
+    }
+    renderSenders();
+  });
+}
+
+async function searchMissed() {
+  const q = $('#missq').value.trim(); if (!q) return;
+  $('#missres').innerHTML = '<div class="sub" style="color:var(--muted)">Searching…</div>';
+  let res;
+  try { res = await run('findMissed', q); } catch (e) { $('#missres').innerHTML = ''; return; }
+  $('#missres').innerHTML = res.length ? res.map(m =>
+    '<div class="src">' + avatar(m.from) + '<div class="who"><div>' + esc(m.from) + ' <span class="sub">' + esc(m.email) + '</span></div>' +
+    '<div class="sub">' + esc(m.subject) + ' · ' + fmtDate(m.date) + (m.bulk ? '' : ' · looks like personal mail') + '</div></div>' +
+    '<div class="acts">' + sAct('one', m.id, m.from, 'Add this one') + sAct('allow', m.email, m.from, 'Add sender', 'primary') + '</div></div>').join('')
+    : '<div class="sub" style="color:var(--muted)">Nothing found outside the reader.</div>';
+  bindSenderActs($('#missres'));
+}
+
+/* ---------- Highlights view (no server call) ---------- */
+function renderHlView() {
+  const q = $('#q').value.trim().toLowerCase(), tf = S.tagFilter;
+  const list = S.allHl.filter(h =>
+    (!tf || splitTags(h.tags).includes(tf)) &&
+    (!q || (h.text + ' ' + h.note + ' ' + h.subject + ' ' + h.sender).toLowerCase().includes(q)));
+  let body;
+  if (!list.length) body = '<div class="empty">' + ico('pen') + '<b>No highlights yet</b>Select text in any newsletter and tap Highlight.</div>';
+  else {
+    const groups = {}, order = [];
+    list.forEach(h => { if (!groups[h.messageId]) { groups[h.messageId] = []; order.push(h.messageId); } groups[h.messageId].push(h); });
+    body = order.map(mid => {
+      const g = groups[mid];
+      return '<div class="group"><div class="gtitle" data-mid="' + esc(mid) + '">' + esc(g[0].subject) + '</div>' +
+        '<div class="gfrom">' + esc(g[0].sender) + ' · ' + plural(g.length, 'highlight') + '</div>' + g.map(hlCard).join('') + '</div>';
+    }).join('');
+  }
+  $('#hlview').innerHTML = '<div class="wtop"><h2>Highlights</h2></div><div class="wide"><p class="lead">' + plural(S.allHl.length, 'highlight') + ' across your reading.' + (tf ? ' Showing #' + esc(tf) + '.' : '') + '</p>' + body + '</div>';
+  bindCards($('#hlview'), false);
+  $$('#hlview .gtitle').forEach(el => el.onclick = () => {
+    const mid = el.dataset.mid, g = S.allHl.find(h => h.messageId === mid);
+    setView('inbox');
+    if (!S.items.find(x => x.id === mid)) S.items.unshift({ id: mid, subject: g.subject, from: g.sender, email: '', date: g.createdAt, unread: false });
+    renderList(); openMsg(mid);
+  });
+}
+
+/* ---------- Settings ---------- */
+function renderSettings() {
+  const st = S.settings || { autoClean: false, cleanDays: 5, scanHour: 7 };
+  const hours = Array.from({ length: 24 }, (_, h) => '<option value="' + h + '"' + (h === st.scanHour ? ' selected' : '') + '>' +
+    (h % 12 || 12) + ':00 ' + (h < 12 ? 'AM' : 'PM') + '</option>').join('');
+  $('#setview').innerHTML = '<div class="wtop"><h2>Settings</h2></div><div class="wide"><p class="lead">How the reader looks after your mail.</p>' +
+    '<div class="card"><div class="setrow"><div><h4>' + ico('trash') + 'Auto-cleanup</h4>' +
+      '<p class="hint" style="margin:0">Every day, newsletters you have read that arrived more than ' + st.cleanDays + ' days ago are <b>deleted from Gmail permanently</b>. Anything you saved, tagged, highlighted or starred in Gmail is kept.</p></div>' +
+      '<button class="switch' + (st.autoClean ? ' on' : '') + '" id="acsw" role="switch" aria-checked="' + !!st.autoClean + '" aria-label="Auto-cleanup"></button></div>' +
+      '<div class="row" style="justify-content:flex-start;margin-top:14px"><button class="btn" id="prevbtn">Preview what would be deleted</button></div>' +
+      '<div class="preview" id="preview"></div></div>' +
+    '<div class="card"><h4>' + ico('refresh') + 'Daily scan</h4><p class="hint">Files new issues from your added senders and lists new senders for you to review.</p>' +
+      '<div class="row" style="justify-content:flex-start;align-items:center">Every day at <select id="hoursel" class="hoursel">' + hours + '</select>' +
+      '<span style="color:var(--muted);font-size:12px">' + esc(st.tz || '') + '</span><button class="btn scanbtn">Check now</button></div></div>' +
+    '<div class="card"><h4>' + ico('sparkle') + 'This device</h4><p class="hint">Connected to your own Readwell backend. Lost a phone? Run rotateApiKey in your script: every device is signed out at once.</p>' +
+      '<div class="row" style="justify-content:flex-start"><button class="btn" id="discbtn">Disconnect this device</button></div></div>' +
+    '<div class="card"><h4>' + ico('book') + 'Your data</h4><p class="hint">Tags, highlights and sender decisions live in a Google Sheet in your Drive. The newsletters stay in Gmail.</p>' +
+      '<div class="row" style="justify-content:flex-start">' + (st.sheetUrl ? '<a class="btn" href="' + esc(st.sheetUrl) + '" target="_blank" rel="noopener">Open data sheet</a>' : '') +
+      '<button class="btn" id="clearbtn">Clear this device\'s cache</button></div></div></div>';
+  $('#acsw').onclick = () => {
+    const on = !$('#acsw').classList.contains('on');
+    $('#acsw').classList.toggle('on', on); $('#acsw').setAttribute('aria-checked', on);
+    S.settings = Object.assign({}, st, { autoClean: on });
+    toast(on ? 'Auto-cleanup on' : 'Auto-cleanup off');
+    bg('setAutoClean', on);
+  };
+  $('#prevbtn').onclick = async () => {
+    const p = $('#preview'); p.style.display = 'block'; p.innerHTML = 'Checking…';
+    let r; try { r = await run('cleanupPreview'); } catch (e) { p.style.display = 'none'; return; }
+    if (!r.count) { p.innerHTML = 'Nothing to clean up right now.'; return; }
+    p.innerHTML = '<b>' + plural(r.count, 'newsletter') + '</b> would be deleted:<ul>' +
+      r.sample.map(x => '<li>' + esc(x.from) + ': ' + esc(x.subject) + '</li>').join('') + (r.count > r.sample.length ? '<li>and ' + (r.count - r.sample.length) + ' more</li>' : '') +
+      '</ul><button class="btn danger" id="cleannow">Delete these now</button>';
+    $('#cleannow').onclick = async () => {
+      const ok = await confirmBox('Delete ' + plural(r.count, 'newsletter') + ' forever?', 'They will be permanently deleted from Gmail. This cannot be undone.', 'Delete forever');
+      if (!ok) return;
+      p.innerHTML = 'Deleting…';
+      try { const n = await run('cleanupNow'); p.innerHTML = 'Deleted ' + plural(n, 'newsletter') + '.'; toast('Deleted ' + plural(n, 'newsletter')); cacheSet('inbox', null); }
+      catch (e) { p.style.display = 'none'; }
+    };
+  };
+  $('#hoursel').onchange = () => {
+    const h = Number($('#hoursel').value);
+    S.settings = Object.assign({}, st, { scanHour: h }); saveState();
+    toast('Daily scan moved to ' + $('#hoursel').selectedOptions[0].textContent);
+    bg('setSchedule', h, st.tz || deviceTz());
+  };
+  $('#discbtn').onclick = async () => {
+    const ok = await confirmBox('Disconnect this device?', 'Readwell forgets your backend link and key on this device. Your mail and highlights are not touched.', 'Disconnect');
+    if (!ok) return;
+    clearLocal(); setConn(null);
+    location.reload();
+  };
+  $('#clearbtn').onclick = () => {
+    try { Object.keys(localStorage).filter(k => k.indexOf('nr_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    toast('Cache cleared. Reloading…');
+    setTimeout(() => location.reload(), 600);
+  };
+}
+
+/* ---------- Connect ---------- */
+const deviceTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } };
+function clearLocal() { try { Object.keys(localStorage).filter(k => k.indexOf('nr_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {} }
+function connectMsg(t) { $('#cmsg').textContent = t || ''; $('#cmsg').style.display = t ? 'block' : 'none'; }
+function showConnect(m) { document.body.classList.add('need-connect'); if (m) connectMsg(m); }
+const LINK_RE = /^https:\/\/script\.google\.com\/macros\/(u\/\d+\/)?s\/[\w-]+\/exec$/;
+
+async function connectWith(url, key) {
+  url = String(url || '').trim(); key = String(key || '').trim().toLowerCase();
+  showConnect();
+  const fail = t => { connectMsg(t); $('#cmanual').open = true; $('#curl').value = url; $('#ckey').value = key; };
+  if (!LINK_RE.test(url)) return fail('That backend link doesn\u2019t look right. It starts with https://script.google.com/macros/s/ and ends with /exec.');
+  if (!/^[0-9a-f]{64}$/.test(key)) return fail('The key should be 64 letters and numbers.');
+  connectMsg('Connecting to your backend\u2026');
+  $('#cbtn').disabled = true;
+  try {
+    const r = await rawCall({ url: url, key: key }, 'ping');
+    if (!r || r.app !== 'readwell') throw new Error('Not a Readwell backend');
+  } catch (e) {
+    $('#cbtn').disabled = false;
+    return fail(e.code === 'Unauthorized' ? 'Your backend refused this key. Run connectLink in your script again and use the new link.'
+      : e.code === 'Network' ? 'Could not reach your backend. Check you are online and that it is deployed with access set to Anyone.'
+      : 'That link didn\u2019t answer like a Readwell backend. Check it is the Web app link from your deployment.');
+  }
+  $('#cbtn').disabled = false;
+  clearLocal();
+  setConn({ url: url, key: key, tzSynced: false });
+  document.body.classList.remove('need-connect'); connectMsg('');
+  toast('Connected. Welcome to Readwell');
+  boot();
+}
+$('#cbtn').onclick = () => connectWith($('#curl').value, $('#ckey').value);
+
+/* ---------- Start: instant from this device, then refresh quietly ---------- */
+function boot() {
+  const cachedState = cacheGet('state');
+  if (cachedState) applyState(cachedState);
+  const cached = cacheGet('inbox');
+  if (cached) { S.items = cached; renderList(); }
+  run('bootstrap').then(r => {
+    applyState(r.state); saveState();
+    if (S.view === 'inbox' && !S.mode) {
+      S.items = r.list.items; S.more = r.list.more; S.start = 40;
+      cacheSet('inbox', S.items);
+      renderList();
+      if (S.cur) {                                   // opened something before startup finished
+        renderSide();
+        const doc = frame.contentDocument;
+        if (doc && doc.__nr) (S.hls[S.cur.id] || []).forEach(h => {
+          if (!doc.querySelector('mark[data-id="' + h.id + '"]')) markSaved(doc, h);
+        });
+      }
+    }
+    // First time on this device: move the daily scan to this device's timezone
+    const c = getConn(), tz = deviceTz(), st = r.state.settings;
+    if (c && !c.tzSynced && tz && st) {
+      if (st.tz !== tz) { S.settings = Object.assign({}, st, { tz: tz }); saveState(); bg('setSchedule', st.scanHour, tz); }
+      c.tzSynced = true; setConn(c);
+    }
+    prefetch();
+  }).catch(() => {});
+}
+
+function connectFromHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (!h.get('connect')) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  connectWith(h.get('connect'), h.get('key'));
+  return true;
+}
+window.addEventListener('hashchange', connectFromHash);   // connect link opened while the app is already open
+(function start() {
+  if (connectFromHash()) return;
+  if (!getConn()) { showConnect(); return; }
+  boot();
+})();
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>

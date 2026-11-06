@@ -10,9 +10,9 @@ Each user gets their own backend by copying the Readwell Apps Script template in
 
 1. **Repo and structure.** Current working code in `backend/`, docs, notes for Claude. ✅
 2. **Backend as an API.** `doPost` JSON endpoint for every function the UI calls, protected by a private key. Code done and live. Still to do: an API deployment with access set to "Anyone" (needs the owner's go-ahead, see below). The reader link now needs the key: add `?k=KEY` to the link.
-3. **App (PWA).** Port the current UI to `app/`, swap `google.script.run` for `fetch` to the user's backend, add a first-run screen (paste backend link and key), offline cache via service worker, install prompt, app icon.
-4. **Setup kit.** Template script to copy, a setup page with a 5-minute walkthrough, user-specific settings (timezone, scan hour) instead of hard-coded values.
-5. **Automation.** GitHub Actions: publish `app/` to GitHub Pages on push; publish the backend as an Apps Script library version with `clasp`, so user copies get fixes.
+3. **App (PWA).** ✅ Built, tested at 5 sizes against a mock backend. Port the current UI to `app/`, swap `google.script.run` for `fetch` to the user's backend, add a first-run screen (paste backend link and key), offline cache via service worker, install prompt, app icon.
+4. **Setup kit.** ✅ Setup page, connect link, per-user scan time and timezone. Still to do: share a template script and set `TEMPLATE_URL` in `app/setup.html`. Template script to copy, a setup page with a 5-minute walkthrough, user-specific settings (timezone, scan hour) instead of hard-coded values.
+5. **Automation.** GitHub Actions: publish `app/` to GitHub Pages on push (✅ workflow added, needs the repo public and Pages source set to GitHub Actions); publish the backend as an Apps Script library version with `clasp`, so user copies get fixes.
 6. **Beta.** Owner moves onto the new setup first, then invite testers.
 
 ## Later, only if there is demand
