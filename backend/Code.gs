@@ -35,12 +35,20 @@ const SHEETS = {
   Candidates: ['email', 'name', 'lastSubject', 'lastDate', 'count', 'kind']
 };
 
+/** Shown first in the editor's Run menu, so a curious click explains instead of doing something. */
+function startHere() {
+  Logger.log('Nothing to run here. To set up Readwell: Deploy, New deployment, gear icon, Web app. Execute as Me, Who has access: Anyone. Deploy, then open the Web app link.');
+}
+
 function doGet(e) {
   // The reader runs with the owner's Gmail access, so it only opens with the owner's key in the link
   // (?k=...). Personal Gmail accounts don't reveal who is viewing, so the key is the proof.
-  const k = e && e.parameter && e.parameter.k;
+  if (!e) { startHere(); return HtmlService.createHtmlOutput(''); }   // clicked Run in the editor: do nothing
+  const k = e.parameter && e.parameter.k;
   if (!isOwner_() && !checkKey_(k)) return welcome_();
-  return HtmlService.createHtmlOutputFromFile('Index')
+  let page;
+  try { page = HtmlService.createHtmlOutputFromFile('Index'); } catch (err) { return welcome_(); }   // copies from the template have no Index file
+  return page
     .setTitle('Reader')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
