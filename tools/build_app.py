@@ -228,6 +228,7 @@ function boot() {
     }
     prefetch();
     autoCheck();                                     // look for new issues if the last check is over 10 minutes old
+    setTimeout(() => showTips(0), 900);              // three short tips, once per device
   }).catch(() => {});
 }
 
