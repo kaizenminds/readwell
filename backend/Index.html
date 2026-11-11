@@ -51,6 +51,11 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .lbar h2{margin:0;font-size:17px;letter-spacing:-.02em;font-weight:700;display:flex;align-items:baseline;gap:8px}
 .lhead{padding:10px 16px;border-bottom:1px solid var(--line);flex:none}
 .lbar h2 .sub{font-size:12px;color:var(--muted);font-weight:500}
+.lstatus{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--muted);font-size:12px;padding:6px 0 6px 8px;white-space:nowrap}
+.lstatus svg.i{width:14px;height:14px}
+.lstatus.busy{color:var(--accent2)}
+.lstatus.busy svg.i{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .search{position:relative}
 .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--faint)}
 .search input{width:100%;padding:9px 12px 9px 36px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);outline:none}
@@ -352,7 +357,7 @@ body.ui-large .tabbar svg.i{width:26px;height:26px}
   </aside>
 
   <section class="col-list" id="listcol">
-    <div class="lbar"><h2><span id="vtitle">Inbox</span><span class="sub" id="vsub"></span></h2></div>
+    <div class="lbar"><h2><span id="vtitle">Inbox</span><span class="sub" id="vsub"></span></h2><button class="lstatus" id="lstatus" aria-live="polite"></button></div>
     <div class="lhead">
       <form class="search" id="searchform"><i data-i="search"></i><input id="q" placeholder="Search newsletters" autocomplete="off"></form>
       <div class="lctl">
@@ -651,20 +656,61 @@ function refresh() {
   else if (isList()) loadList(true);
 }
 
-async function checkMail() {
-  const btns = $$('.scanbtn'); btns.forEach(b => b.disabled = true);
-  toast('Checking your mail…');
+/* ---------- Checking for new issues ----------
+   Runs by itself when the app opens or comes back to the front (at most every 10 minutes), and from
+   every Check now button. Afterwards everything on screen is reloaded, so what you see is current. */
+const lastCheck = () => { try { return Number(localStorage.getItem('nr_lastcheck') || 0); } catch (e) { return 0; } };
+function ago(t) {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + ' min ago';
+  const d = new Date(t), today = new Date().toDateString() === d.toDateString();
+  return (today ? '' : d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ') + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+function paintStatus() {
+  const b = $('#lstatus'); if (!b) return;
+  const t = lastCheck();
+  b.classList.toggle('busy', !!S.checking);
+  b.innerHTML = ico('refresh') + '<span>' + (S.checking ? 'Checking for new issues…' : t ? 'Updated ' + ago(t) : 'Check for new issues') + '</span>';
+  b.title = 'Check now';
+}
+setInterval(paintStatus, 60000);
+setTimeout(paintStatus, 0);
+async function checkMail(auto) {
+  if (S.checking) return;
+  S.checking = true; paintStatus();
+  $$('.scanbtn').forEach(b => b.disabled = true);
   try {
-    const r = await run('scanNow');
+    const r = await quiet('scanNow');
+    try { localStorage.setItem('nr_lastcheck', String(Date.now())); } catch (e) {}
     const parts = [];
     if (r.filed) parts.push(plural(r.filed, 'new newsletter'));
     if (r.found) parts.push(plural(r.found, 'new sender') + ' to review');
-    toast(parts.length ? parts.join(', ') : 'Nothing new');
-    if (r.found) { setPending(S.pendingSenders + r.found); S.sendersData = null; if (S.view === 'senders') loadSenders(true); }
-    if (r.filed && S.view === 'inbox') loadList(true);
-  } catch (e) {} finally { btns.forEach(b => b.disabled = false); }
+    if (parts.length) toast(parts.join(' and '));
+    else if (!auto) toast('All caught up. Nothing new since the last check');
+    if (r.found) setPending(S.pendingSenders + r.found);
+    S.sendersData = null;                              // senders change even when nothing is new
+    if (isList()) loadList(true);                      // always show what the scan filed
+    else if (S.view === 'senders') loadSenders(true);
+  } catch (e) {
+    if (!auto) toast('Could not check right now. Try again in a minute');
+  } finally {
+    S.checking = false; paintStatus();
+    $$('.scanbtn').forEach(b => b.disabled = false);
+  }
 }
-document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.scanbtn')) checkMail(); });
+function autoCheck() { if (Date.now() - lastCheck() > 10 * 60000) checkMail(true); else paintStatus(); }
+$('#lstatus').onclick = () => checkMail(false);
+// Back from the background (iPad and iPhone keep the app in memory): refresh what is on screen
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  if (!hiddenAt || Date.now() - hiddenAt < 60000) return;
+  if (isList() && !S.checking) loadList(true);
+  if (S.view === 'senders') loadSenders(true);
+  autoCheck();
+});
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.scanbtn')) checkMail(false); });
 
 /* ---------- List ---------- */
 async function loadList(reset) {

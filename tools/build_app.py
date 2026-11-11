@@ -227,6 +227,7 @@ function boot() {
       c.tzSynced = true; setConn(c);
     }
     prefetch();
+    autoCheck();                                     // look for new issues if the last check is over 10 minutes old
   }).catch(() => {});
 }
 
